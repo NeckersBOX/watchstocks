@@ -1,0 +1,19 @@
+{
+  "name": "chart-the-stock-market",
+  "version": "1.0.0",
+  "description": "Chart the Stock Market - freeCodeCamp Challenge",
+  "main": "src/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NeckersBOX/watchstocks.git"
+  },
+  "author": "Davide Francesco Merico",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NeckersBOX/watchstocks/issues"
+  },
+  "homepage": "https://github.com/NeckersBOX/watchstocks#readme"
+}
