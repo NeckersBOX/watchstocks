@@ -5,3 +5,5 @@ const App = React.createClass ({
     return <h1>Isomorphic Test</h1>;
   }
 });
+
+export default App;

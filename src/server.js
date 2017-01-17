@@ -1,17 +1,24 @@
-"use strict";
+import Express from 'express';
+import path from 'path';
+import bodyParser from 'body-parser';
+import React from 'react';
+import ReactDOMServer from 'react-dom/server'
+import App from './components/App';
 
-const express = require ('express');
-const path = require ('path');
-const bodyParser = require ('body-parser');
-
-const app = new express ();
+let app = new Express ();
 
 app.set ('view engine', 'ejs');
-app.set ('views', path.join (__dirname, 'src/views'));
-app.use (express.static ('dist'));
+app.set ('views', path.join (__dirname, 'views'));
+app.use (Express.static ('dist'));
 app.use (bodyParser.json ());
 app.use (bodyParser.urlencoded ({ extended: true }));
 
-app.get ('*', (req, res) => res.render ('index', {
-  reactOutput: '<h1>TODO</h1>'
-}));
+app.get ('/', (req, res) => {
+  let reactHtml = ReactDOMServer.renderToString (<App />);
+
+  res.render ('index', {
+    reactOutput: reactHtml
+  })
+});
+
+app.listen (process.env.PORT || 3000);
