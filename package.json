@@ -23,7 +23,10 @@
     "express": "^4.14.0",
     "griddle-react": "^0.7.1",
     "react": "^15.4.2",
-    "react-dom": "^15.4.2"
+    "react-dom": "^15.4.2",
+    "react-google-chart": "^0.1.2",
+    "react-redux": "^5.0.2",
+    "redux": "^3.6.0"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
