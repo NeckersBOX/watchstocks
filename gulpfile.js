@@ -19,7 +19,7 @@ gulp.task ('webpack', (cb) =>
   gulp.src ('src/app-client.js')
     .pipe (webpackStream ({
       output: {
-        filename: 'bundle.min.js'
+        filename: 'bundle.js'
       },
       module: {
         loaders: [{
@@ -38,7 +38,12 @@ gulp.task ('webpack', (cb) =>
         })
       ],
     }))
-    .pipe (minify ())
+    .pipe (minify ({
+      ext: {
+        src:'.js',
+        min:'.min.js'
+      }
+    }))
     .pipe (gulp.dest ('dist/js'))
 );
 
