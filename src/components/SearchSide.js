@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import StockInfo from './StockInfo';
 
 const SearchSide = React.createClass ({
   getInitialState () {
@@ -34,7 +35,7 @@ const SearchSide = React.createClass ({
         <hr />
         {this.state.loadingStock ? <small>Loading {this.state.searchStock}..</small> : ''}
 
-        <p>Stock list... in progress</p>
+        {this.props.stockList.map ((stock, idx) => <StockInfo key={idx} {...stock} />)}
       </div>
     )
   },
@@ -47,7 +48,7 @@ const SearchSide = React.createClass ({
     else this.setState ({ searchStock: searchStock });
 
     if ( requestTime < (this.state.lastRequest + 300) )
-      return this.setState ({ stockList: [] });
+      return;
 
     this.setState ({ lastRequest: requestTime, loadingSuggest: true });
 

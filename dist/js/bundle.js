@@ -22636,7 +22636,16 @@
 
 	  switch (action.type) {
 	    case 'ADD_STOCK':
-	      newState = Object.assign({}, state, { stockList: state.stockList.concat(action.data) });
+	      newState = Object.assign({}, state, {
+	        stockList: state.stockList.concat(action.data)
+	      });
+	      break;
+	    case 'REMOVE_STOCK':
+	      newState = Object.assign({}, state, {
+	        stockList: state.stockList.filter(function (stock) {
+	          return stock.id != action.id;
+	        })
+	      });
 	      break;
 	    case 'POST':
 	      postRequest(action.url, action.data, action.callback);
@@ -22724,11 +22733,17 @@
 	  value: true
 	});
 
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 	var _react = __webpack_require__(1);
 
 	var _react2 = _interopRequireDefault(_react);
 
 	var _reactRedux = __webpack_require__(167);
+
+	var _StockInfo = __webpack_require__(208);
+
+	var _StockInfo2 = _interopRequireDefault(_StockInfo);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -22793,11 +22808,9 @@
 	        this.state.searchStock,
 	        '..'
 	      ) : '',
-	      _react2.default.createElement(
-	        'p',
-	        null,
-	        'Stock list... in progress'
-	      )
+	      this.props.stockList.map(function (stock, idx) {
+	        return _react2.default.createElement(_StockInfo2.default, _extends({ key: idx }, stock));
+	      })
 	    );
 	  },
 	  editSearch: function editSearch(e) {
@@ -22811,7 +22824,7 @@
 
 	    if (searchStock.length < 1) return this.setState({ searchStock: searchStock, stockList: [] });else this.setState({ searchStock: searchStock });
 
-	    if (requestTime < this.state.lastRequest + 300) return this.setState({ stockList: [] });
+	    if (requestTime < this.state.lastRequest + 300) return;
 
 	    this.setState({ lastRequest: requestTime, loadingSuggest: true });
 
@@ -22881,6 +22894,68 @@
 	})(SearchSide);
 
 	exports.default = ConnectedSearchSide;
+
+/***/ },
+/* 208 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactRedux = __webpack_require__(167);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var StockInfo = _react2.default.createClass({
+	  displayName: 'StockInfo',
+	  render: function render() {
+	    console.log(this.props);
+	    return _react2.default.createElement(
+	      'div',
+	      { className: 'stock-info' },
+	      _react2.default.createElement(
+	        'h2',
+	        null,
+	        this.props.dataset_code,
+	        ' ',
+	        _react2.default.createElement(
+	          'small',
+	          null,
+	          this.props.database_code
+	        ),
+	        _react2.default.createElement(
+	          'i',
+	          { onClick: this.removeStock, className: 'remove material-icons' },
+	          'close'
+	        )
+	      ),
+	      _react2.default.createElement(
+	        'p',
+	        null,
+	        this.props.name
+	      )
+	    );
+	  },
+	  removeStock: function removeStock() {
+	    this.props.dispatch({
+	      type: 'REMOVE_STOCK',
+	      id: this.props.id
+	    });
+	  }
+	});
+
+	var ConnectedStockInfo = (0, _reactRedux.connect)(function (state) {
+	  return {};
+	})(StockInfo);
+
+	exports.default = ConnectedStockInfo;
 
 /***/ }
 /******/ ]);

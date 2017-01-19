@@ -21,7 +21,7 @@ body
     padding: 0.5em
     border-radius: 3px 0 0 3px
     border: 1px solid #aaa
-    width: 210px
+    width: 196px
     height: 40px
     font-size: 1em
 
@@ -34,3 +34,27 @@ body
     position: relative
     top: 7px
     height: 40px
+
+.stock-info
+  border: 1px solid #aaa
+  border-left-width: 3px
+  padding: 0px 10px
+  border-radius: 4px
+  margin-top: 10px
+
+  &:hover, &:focus
+    border-color: #167ac6
+
+    .remove
+      color: #167ac6
+
+  small
+    color: #aaa
+
+  .remove
+    float: right
+    color: #666
+    cursor: pointer
+
+    &:hover, &:focus
+      color: #ff2f00

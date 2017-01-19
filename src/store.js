@@ -8,7 +8,14 @@ const reducer = (state, action) => {
 
   switch (action.type) {
     case 'ADD_STOCK':
-      newState = Object.assign ({}, state, { stockList: state.stockList.concat (action.data) });
+      newState = Object.assign ({}, state, {
+        stockList: state.stockList.concat (action.data)
+      });
+      break;
+    case 'REMOVE_STOCK':
+      newState = Object.assign ({}, state, {
+        stockList: state.stockList.filter (stock => stock.id != action.id )
+      });
       break;
     case 'POST':
       postRequest (action.url, action.data, action.callback);
