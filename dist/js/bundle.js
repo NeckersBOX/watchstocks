@@ -22682,31 +22682,90 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactRedux = __webpack_require__(167);
+	var _SearchSide = __webpack_require__(207);
+
+	var _SearchSide2 = _interopRequireDefault(_SearchSide);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var ChartSide = _react2.default.createClass({
+	  displayName: 'ChartSide',
+	  render: function render() {
+	    return _react2.default.createElement('span', null);
+	  }
+	});
 
 	var Layout = _react2.default.createClass({
 	  displayName: 'Layout',
 	  render: function render() {
-	    console.log(this.props);
-
 	    return _react2.default.createElement(
 	      'div',
-	      null,
+	      { className: 'layout' },
+	      _react2.default.createElement(_SearchSide2.default, null),
+	      _react2.default.createElement(ChartSide, null)
+	    );
+	  }
+	});
+
+	exports.default = Layout;
+
+/***/ },
+/* 207 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactRedux = __webpack_require__(167);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var SearchSide = _react2.default.createClass({
+	  displayName: 'SearchSide',
+	  render: function render() {
+	    return _react2.default.createElement(
+	      'div',
+	      { className: 'search-side' },
 	      _react2.default.createElement(
 	        'h1',
 	        null,
-	        'Chart the stock market'
+	        'SEARCH STOCK'
+	      ),
+	      _react2.default.createElement(
+	        'form',
+	        { className: 'search-form' },
+	        _react2.default.createElement('input', { type: 'text', placeholder: 'Stock name' }),
+	        _react2.default.createElement(
+	          'button',
+	          { type: 'submit' },
+	          _react2.default.createElement(
+	            'i',
+	            { className: 'material-icons' },
+	            'search'
+	          )
+	        )
+	      ),
+	      _react2.default.createElement(
+	        'p',
+	        null,
+	        'Stock list... in progress'
 	      )
 	    );
 	  }
 	});
 
-	var ConnectedLayout = (0, _reactRedux.connect)(function (state) {
+	var ConnectedSearchSide = (0, _reactRedux.connect)(function (state) {
 	  return state;
-	})(Layout);
-	exports.default = ConnectedLayout;
+	})(SearchSide);
+
+	exports.default = ConnectedSearchSide;
 
 /***/ }
 /******/ ]);
