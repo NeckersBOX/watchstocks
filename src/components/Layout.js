@@ -1,7 +1,6 @@
 import React from 'react';
 import SearchSide from './SearchSide';
-
-const ChartSide = React.createClass ({ render () { return <span></span>; } });
+import ChartSide from './ChartSide';
 
 const Layout = React.createClass ({
   render () {

@@ -22700,14 +22700,11 @@
 
 	var _SearchSide2 = _interopRequireDefault(_SearchSide);
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	var _ChartSide = __webpack_require__(209);
 
-	var ChartSide = _react2.default.createClass({
-	  displayName: 'ChartSide',
-	  render: function render() {
-	    return _react2.default.createElement('span', null);
-	  }
-	});
+	var _ChartSide2 = _interopRequireDefault(_ChartSide);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var Layout = _react2.default.createClass({
 	  displayName: 'Layout',
@@ -22716,7 +22713,7 @@
 	      'div',
 	      { className: 'layout' },
 	      _react2.default.createElement(_SearchSide2.default, null),
-	      _react2.default.createElement(ChartSide, null)
+	      _react2.default.createElement(_ChartSide2.default, null)
 	    );
 	  }
 	});
@@ -22956,6 +22953,59 @@
 	})(StockInfo);
 
 	exports.default = ConnectedStockInfo;
+
+/***/ },
+/* 209 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactRedux = __webpack_require__(167);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var ChartSide = _react2.default.createClass({
+	  displayName: 'ChartSide',
+	  render: function render() {
+	    return _react2.default.createElement(
+	      'div',
+	      { className: 'chart-side' },
+	      _react2.default.createElement(
+	        'small',
+	        null,
+	        _react2.default.createElement(
+	          'i',
+	          { style: {
+	              fontSize: '12px',
+	              position: 'relative',
+	              top: '1px'
+	            }, className: 'material-icons' },
+	          'copyright'
+	        ),
+	        ' Written by ',
+	        _react2.default.createElement(
+	          'a',
+	          { href: 'http://neckersbox.eu' },
+	          'Davide Francesco Merico'
+	        )
+	      )
+	    );
+	  }
+	});
+
+	var ConnectedChartSide = (0, _reactRedux.connect)(function (state) {
+	  return state;
+	})(ChartSide);
+
+	exports.default = ConnectedChartSide;
 
 /***/ }
 /******/ ]);
