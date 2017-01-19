@@ -1,6 +1,6 @@
 {
   "name": "chart-the-stock-market",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Chart the Stock Market - freeCodeCamp Challenge",
   "main": "src/server.js",
   "scripts": {
