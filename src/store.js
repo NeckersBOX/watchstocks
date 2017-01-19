@@ -1,10 +1,15 @@
 const reducer = (state, action) => {
   if ( typeof state === 'undefined' )
-    return { stock: [] };
+    return {
+      stockList: []
+    };
 
   let newState = state;
 
   switch (action.type) {
+    case 'ADD_STOCK':
+      newState = Object.assign ({}, state, { stockList: state.stockList.concat (action.data) });
+      break;
     case 'POST':
       postRequest (action.url, action.data, action.callback);
       break;

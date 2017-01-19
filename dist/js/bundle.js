@@ -22628,11 +22628,16 @@
 	  value: true
 	});
 	var reducer = function reducer(state, action) {
-	  if (typeof state === 'undefined') return { stock: [] };
+	  if (typeof state === 'undefined') return {
+	    stockList: []
+	  };
 
 	  var newState = state;
 
 	  switch (action.type) {
+	    case 'ADD_STOCK':
+	      newState = Object.assign({}, state, { stockList: state.stockList.concat(action.data) });
+	      break;
 	    case 'POST':
 	      postRequest(action.url, action.data, action.callback);
 	      break;
@@ -22729,6 +22734,15 @@
 
 	var SearchSide = _react2.default.createClass({
 	  displayName: 'SearchSide',
+	  getInitialState: function getInitialState() {
+	    return {
+	      searchStock: '',
+	      stockList: [],
+	      lastRequest: 0,
+	      loadingSuggest: false,
+	      loadingStock: false
+	    };
+	  },
 	  render: function render() {
 	    return _react2.default.createElement(
 	      'div',
@@ -22738,13 +22752,32 @@
 	        null,
 	        'SEARCH STOCK'
 	      ),
+	      this.state.loadingSuggest ? _react2.default.createElement(
+	        'small',
+	        null,
+	        'Loading list for ',
+	        this.state.searchStock,
+	        '..'
+	      ) : _react2.default.createElement(
+	        'small',
+	        null,
+	        'No suggestions, search for more'
+	      ),
 	      _react2.default.createElement(
 	        'form',
 	        { className: 'search-form' },
-	        _react2.default.createElement('input', { type: 'text', placeholder: 'Stock name' }),
+	        _react2.default.createElement('input', { type: 'text', list: 'stockList', onChange: this.editSearch,
+	          placeholder: 'Stock name', value: this.state.searchStock }),
+	        _react2.default.createElement(
+	          'datalist',
+	          { id: 'stockList' },
+	          this.state.stockList.map(function (val, idx) {
+	            return _react2.default.createElement('option', { key: idx, value: val.dataset_code });
+	          })
+	        ),
 	        _react2.default.createElement(
 	          'button',
-	          { type: 'submit' },
+	          { type: 'submit', onClick: this.addStock },
 	          _react2.default.createElement(
 	            'i',
 	            { className: 'material-icons' },
@@ -22752,12 +22785,94 @@
 	          )
 	        )
 	      ),
+	      _react2.default.createElement('hr', null),
+	      this.state.loadingStock ? _react2.default.createElement(
+	        'small',
+	        null,
+	        'Loading ',
+	        this.state.searchStock,
+	        '..'
+	      ) : '',
 	      _react2.default.createElement(
 	        'p',
 	        null,
 	        'Stock list... in progress'
 	      )
 	    );
+	  },
+	  editSearch: function editSearch(e) {
+	    var _this = this;
+
+	    var requestTime = new Date().getTime();
+	    var searchStock = e.target.value.toUpperCase().split('').filter(function (val) {
+	      return (/[A-Za-z]/.test(val)
+	      );
+	    }).join('');
+
+	    if (searchStock.length < 1) return this.setState({ searchStock: searchStock, stockList: [] });else this.setState({ searchStock: searchStock });
+
+	    if (requestTime < this.state.lastRequest + 300) return this.setState({ stockList: [] });
+
+	    this.setState({ lastRequest: requestTime, loadingSuggest: true });
+
+	    this.props.dispatch({
+	      type: 'POST',
+	      url: '/search-stock',
+	      data: {
+	        query: searchStock
+	      },
+	      callback: function callback(res) {
+	        if (res.error) {
+	          _this.setState({ stockList: [], lastRequest: requestTime, loadingSuggest: false });
+	          return console.warn(res.error);
+	        }
+
+	        if (res.query != _this.state.searchStock) {
+	          _this.setState({
+	            stockList: [],
+	            lastRequest: res.requestTime,
+	            loadingSuggest: false
+	          });
+	        } else {
+	          _this.setState({
+	            stockList: res.stockList,
+	            lastRequest: res.requestTime,
+	            loadingSuggest: false
+	          });
+	        }
+	      }
+	    });
+	  },
+	  addStock: function addStock(e) {
+	    var _this2 = this;
+
+	    e.preventDefault();
+
+	    if (this.state.searchStock.length < 1) return;
+
+	    if (this.props.stockList.filter(function (stock) {
+	      return stock.dataset_code == _this2.state.searchStock;
+	    }).length) return;
+
+	    this.setState({ loadingStock: true });
+
+	    this.props.dispatch({
+	      type: 'POST',
+	      url: '/get-stock',
+	      data: {
+	        query: this.state.searchStock
+	      },
+	      callback: function callback(res) {
+	        _this2.setState({ loadingStock: false });
+
+	        if (res.error) return console.warn(res.error);
+
+	        _this2.props.dispatch({
+	          type: 'ADD_STOCK',
+	          data: res.stockData
+	        });
+	      }
+	    });
 	  }
 	});
 

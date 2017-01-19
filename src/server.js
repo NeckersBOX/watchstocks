@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server'
 import App from './components/App';
+import { searchQuandlDatasets, getQuandlDatasetData } from './quandl';
 
 let app = new Express ();
 
@@ -18,7 +19,70 @@ app.get ('/', (req, res) => {
 
   res.render ('index', {
     reactOutput: reactHtml
-  })
+  });
+});
+
+app.post ('/search-stock', (req, res) => {
+  res.writeHead (200, { 'Content-Type': 'application/json' });
+
+  if ( !req.body.hasOwnProperty ('query') )
+    return res.end (JSON.stringify ({ error: 'Invalid request. `query` missing.' }));
+
+  let query = req.body.query.split ('').filter (val => /[A-Za-z]/.test (val)).join ('');
+
+  if ( query.length < 1 )
+    return res.end (JSON.stringify ({
+      error: false,
+      stockList: [],
+      requestTime: new Date ().getTime (),
+      query: query
+    }));
+
+  const quandlCallback = (page) => {
+    if ( page.hasOwnProperty ('quandl_error') ) {
+      let error = '/search-stock, Quandl Error: ' + page.quandl_error.message;
+
+      console.warn (error);
+      return res.end (JSON.stringify ({ error: error }));
+    }
+
+    return res.end (JSON.stringify ({
+      error: false,
+      stockList: page.datasets,
+      requestTime: new Date ().getTime (),
+      query: query
+    }));
+  };
+
+  searchQuandlDatasets (1, query, quandlCallback);
+});
+
+app.post ('/get-stock', (req, res) => {
+  res.writeHead (200, { 'Content-Type': 'application/json' });
+
+  if ( !req.body.hasOwnProperty ('query') )
+    return res.end (JSON.stringify ({ error: 'Invalid request. `query` missing.' }));
+
+  let query = req.body.query.split ('').filter (val => /[A-Za-z]/.test (val)).join ('');
+
+  if ( query.length < 1 )
+    return res.end (JSON.stringify ({ error: 'Stock not found' }));
+
+  const quandlCallback = (page) => {
+    if ( page.hasOwnProperty ('quandl_error') ) {
+      let error = '/get-stock, Quandl Error: ' + page.quandl_error.message;
+
+      console.warn (error);
+      return res.end (JSON.stringify ({ error: error }));
+    }
+
+    return res.end (JSON.stringify ({
+      error: false,
+      stockData: page.dataset
+    }));
+  };
+
+  getQuandlDatasetData (query, quandlCallback);
 });
 
 app.listen (process.env.PORT || 3000);
