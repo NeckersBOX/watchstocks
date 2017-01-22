@@ -3,7 +3,6 @@ import { connect } from 'react-redux';
 
 const StockInfo = React.createClass ({
   render () {
-    console.log (this.props);
     return (
       <div className="stock-info">
         <h2>

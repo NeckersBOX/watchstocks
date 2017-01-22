@@ -66,7 +66,7 @@ const SearchSide = React.createClass ({
 
         if ( res.query != this.state.searchStock ) {
           this.setState ({
-            stockList: [],
+            stockList: res.query.length < this.state.searchStock.length ? res.stockList : [],
             lastRequest: res.requestTime,
             loadingSuggest: false
           });
