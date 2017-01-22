@@ -2,75 +2,32 @@ const reducer = (state, action) => {
   if ( typeof state === 'undefined' )
     return {
       stockList: [],
-      dateList: [],
+      statValues: {
+        minVal: 0,
+        maxVal: 0,
+        minDate: new Date (),
+        maxDate: new Date ()
+      }
     };
 
   let newState = state;
+  let newStockList = null;
 
   switch (action.type) {
     case 'ADD_STOCK':
-      let newStockList = state.stockList.concat (action.data);
+      newStockList = state.stockList.concat (action.data);
 
       newState = Object.assign ({}, state, {
         stockList: newStockList,
-        dateList: getDateList (newStockList, state.dateList)
+        statValues: doStatOnStock (newStockList)
       });
       break;
     case 'REMOVE_STOCK':
-      let newStockList = state.stockList.filter (stock => stock.id != action.id);
+      newStockList = state.stockList.filter (stock => stock.id != action.id);
 
       newState = Object.assign ({}, state, {
         stockList: newStockList,
-        dateList: getDateList (newStockList, state.dateList);
-      });
-      break;
-    case 'CHART_RES_DAY':
-      let stateData = {
-        dataset_codes: state.stockList.map (stock => stock.dataset_code),
-        data: state.dateList.map (date => {
-          let records = [];
-
-          for ( let stockId in state.stockList ) {
-            for ( let dataId in state.stockList[stockId].data ) {
-              if ( state.stockList[stockId].data[dataId][0] === date ) {
-                records.push ({
-                  name: state.stockList[stockId].dataset_code,
-                  value: state.stockList[stockId].data[dataId][4]
-                });
-                break;
-              }
-            }
-          }
-
-          return {
-            date: new Date (date),
-            values: records
-          };
-        })
-      };
-
-      const getArraySorted = (codes, values) => {
-        let codeToVal = [];
-
-        for ( let codeId in codes ) {
-          let found = false;
-          for ( let valueId in values ) {
-            if ( values[valueId].name == codes[codeId] ) {
-              found = values[valueId].value;
-              break;
-            }
-          }
-
-          codeToVal.push ((found === false) ? 0 : found);
-        }
-
-        return codeToVal;
-      };
-
-      newState = Object.assign ({}, newState, {
-        chartData: [[ 'Date' ].concat (stateData.dataset_codes)].concat (stateData.data.map (
-          date => [ date.date ].concat (getArraySorted (stateData.dataset_codes, date.values))
-        ))
+        statValues: doStatOnStock (newStockList)
       });
       break;
     case 'POST':
@@ -105,18 +62,24 @@ const postRequest = (url, data, callback) => {
   request.send (postData.join ('&'));
 };
 
-const getDateList = (stockList, dateList) => {
-  return [];
-  let newDateList = [];
+const doStatOnStock = (stockList) => stockList.reduce ((prev, curr) => {
+  let statOnStock = curr.data.reduce ((prevData, currData) => {
+    let date = new Date (currData[0]);
 
-  for ( let stockId in stockList ) {
-    for ( let dataId in stockList[stockId].data ) {
-      if ( dateList.indexOf (stockList[stockId].data[dataId][0]) === -1 )
-        newDateList.push (stockList[stockId].data[dataId][0]);
+    return {
+      minVal: Math.min (currData[4], prev.minVal),
+      maxVal: Math.max (currData[4], prev.maxVal),
+      minDate: new Date (Math.min (date, prev.minDate)),
+      maxDate: new Date (Math.max (date, prev.maxDate))
     }
-  }
+  }, { minVal: 0, maxVal: 0, minDate: new Date (), maxDate: new Date () });
 
-  return dateList.concat (newDateList).sort ();
-};
+  return {
+    minVal: Math.min (statOnStock.minVal, prev.minVal),
+    maxVal: Math.max (statOnStock.maxVal, prev.maxVal),
+    minDate: new Date (Math.min (statOnStock.minDate, prev.minDate)),
+    maxDate: new Date (Math.max (statOnStock.maxDate, prev.maxDate))
+  };
+}, { minVal: 0, maxVal: 0, minDate: new Date (), maxDate: new Date () });
 
 export default reducer;
