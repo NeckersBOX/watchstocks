@@ -23139,7 +23139,7 @@
 	      null,
 	      _react2.default.createElement(
 	        'div',
-	        { style: { overflow: 'auto' } },
+	        { className: 'chart-container' },
 	        _react2.default.createElement('svg', { height: this.state.height, width: this.state.width, className: 'stockChart' })
 	      ),
 	      this.props.stockList.map(function (stock, idx) {
