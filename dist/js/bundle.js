@@ -22643,7 +22643,8 @@
 
 	  switch (action.type) {
 	    case 'ADD_STOCK':
-	      newStockList = state.stockList.concat(action.data);
+	      newStockList = state.stockList.slice();
+	      newStockList.push(action.data);
 
 	      newState = Object.assign({}, state, {
 	        stockList: newStockList,
@@ -22698,13 +22699,17 @@
 	    var statOnStock = curr.data.reduce(function (prevData, currData) {
 	      var date = new Date(currData[0]);
 
+	      if (!prevData) return { minVal: currData[4], maxVal: currData[4], minDate: date, maxDate: date };
+
 	      return {
-	        minVal: Math.min(currData[4], prev.minVal),
-	        maxVal: Math.max(currData[4], prev.maxVal),
-	        minDate: new Date(Math.min(date, prev.minDate)),
-	        maxDate: new Date(Math.max(date, prev.maxDate))
+	        minVal: Math.min(currData[4], prevData.minVal),
+	        maxVal: Math.max(currData[4], prevData.maxVal),
+	        minDate: new Date(Math.min(date, prevData.minDate)),
+	        maxDate: new Date(Math.max(date, prevData.maxDate))
 	      };
-	    }, { minVal: 0, maxVal: 0, minDate: new Date(), maxDate: new Date() });
+	    }, null);
+
+	    if (!prev) return statOnStock;
 
 	    return {
 	      minVal: Math.min(statOnStock.minVal, prev.minVal),
@@ -22712,7 +22717,7 @@
 	      minDate: new Date(Math.min(statOnStock.minDate, prev.minDate)),
 	      maxDate: new Date(Math.max(statOnStock.maxDate, prev.maxDate))
 	    };
-	  }, { minVal: 0, maxVal: 0, minDate: new Date(), maxDate: new Date() });
+	  }, null);
 	};
 
 	exports.default = reducer;
@@ -23083,17 +23088,69 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	var colorAsService = ['#f44336', '#4CAF50', '#FF9800', '#00BCD4', '#607D8B', '#9C27B0', '#F4511E', '#5D4037', '#1A237E', '#1B5E20', '#d50000', '#AEEA00', '#E91E63', '#004D40', '#18FFFF', '#455A64'];
+
 	var StockChart = _react2.default.createClass({
 	  displayName: 'StockChart',
 	  getInitialState: function getInitialState() {
-	    return { width: window.innerWidth, height: window.innerHeight };
+	    return { width: 0, height: 0 };
 	  },
 	  componentDidMount: function componentDidMount() {
-	    var stockChart = d3.select('.chart').append('svg').attr('width', this.state.width).attr('height', this.state.height);
+	    this.drawChart();
+	  },
+	  componentDidUpdate: function componentDidUpdate() {
+	    var dayTime = 24 * 60 * 60 * 1000;
+	    var widthDays = Math.round((this.props.statValues.maxDate.getTime() - this.props.statValues.minDate.getTime()) / dayTime) * 5;
+
+	    if (widthDays != this.state.width) this.setState({ width: widthDays, height: 400 });
+
+	    this.drawChart();
+	  },
+	  drawChart: function drawChart() {
+	    var svgNode = document.getElementsByClassName("stockChart");
+	    while (svgNode[0].firstChild) {
+	      svgNode[0].removeChild(svgNode[0].firstChild);
+	    }var stockChart = d3.select('.stockChart');
+
+	    var y = d3.scaleLinear().domain([this.props.statValues.minVal, this.props.statValues.maxVal]).range([0, this.state.height]);
+
+	    var x = d3.scaleTime().domain([this.props.statValues.minDate, this.props.statValues.maxDate]).range([0, this.state.width]);
+
+	    var line = d3.line().x(function (d) {
+	      return x(d.date);
+	    }).y(function (d) {
+	      return y(d.close);
+	    });
+
+	    this.props.stockList.forEach(function (stock, idx) {
+	      var stockNode = stockChart.append("path").attr('id', 'path' + stock.id).attr("fill", "none").attr("stroke", colorAsService[idx % colorAsService.length]).attr("stroke-linejoin", "round").attr("stroke-linecap", "round").attr("stroke-width", 1.5);
+
+	      stockNode.datum(stock.data.map(function (data) {
+	        return {
+	          date: new Date(data[0]),
+	          close: +data[4]
+	        };
+	      })).attr("d", line);
+	    });
 	  },
 	  render: function render() {
-	    console.log(this.props);
-	    return _react2.default.createElement('div', { className: 'stockChart' });
+	    return _react2.default.createElement(
+	      'div',
+	      null,
+	      _react2.default.createElement(
+	        'div',
+	        { style: { overflow: 'auto' } },
+	        _react2.default.createElement('svg', { height: this.state.height, width: this.state.width, className: 'stockChart' })
+	      ),
+	      this.props.stockList.map(function (stock, idx) {
+	        return _react2.default.createElement(
+	          'div',
+	          { className: 'legend-stock' },
+	          _react2.default.createElement('div', { style: { backgroundColor: colorAsService[idx % colorAsService.length] } }),
+	          stock.dataset_code
+	        );
+	      })
+	    );
 	  }
 	});
 
