@@ -1,13 +1,7 @@
 const reducer = (state, action) => {
   if ( typeof state === 'undefined' )
     return {
-      stockList: [],
-      statValues: {
-        minVal: 0,
-        maxVal: 0,
-        minDate: new Date (),
-        maxDate: new Date ()
-      }
+      stockList: []
     };
 
   let newState = state;
@@ -19,16 +13,14 @@ const reducer = (state, action) => {
       newStockList.push (action.data);
 
       newState = Object.assign ({}, state, {
-        stockList: newStockList,
-        statValues: doStatOnStock (newStockList)
+        stockList: newStockList
       });
       break;
     case 'REMOVE_STOCK':
       newStockList = state.stockList.filter (stock => stock.id != action.id);
 
       newState = Object.assign ({}, state, {
-        stockList: newStockList,
-        statValues: doStatOnStock (newStockList)
+        stockList: newStockList
       });
       break;
     case 'POST':
@@ -62,31 +54,5 @@ const postRequest = (url, data, callback) => {
 
   request.send (postData.join ('&'));
 };
-
-const doStatOnStock = (stockList) => stockList.reduce ((prev, curr) => {
-  let statOnStock = curr.data.reduce ((prevData, currData) => {
-    let date = new Date (currData[0]);
-
-    if ( !prevData )
-      return { minVal: currData[4], maxVal: currData[4], minDate: date, maxDate: date };
-
-    return {
-      minVal: Math.min (currData[4], prevData.minVal),
-      maxVal: Math.max (currData[4], prevData.maxVal),
-      minDate: new Date (Math.min (date, prevData.minDate)),
-      maxDate: new Date (Math.max (date, prevData.maxDate))
-    }
-  }, null);
-
-  if ( !prev )
-    return statOnStock;
-
-  return {
-    minVal: Math.min (statOnStock.minVal, prev.minVal),
-    maxVal: Math.max (statOnStock.maxVal, prev.maxVal),
-    minDate: new Date (Math.min (statOnStock.minDate, prev.minDate)),
-    maxDate: new Date (Math.max (statOnStock.maxDate, prev.maxDate))
-  };
-}, null);
 
 export default reducer;

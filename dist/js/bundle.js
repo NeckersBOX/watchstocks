@@ -22629,13 +22629,7 @@
 	});
 	var reducer = function reducer(state, action) {
 	  if (typeof state === 'undefined') return {
-	    stockList: [],
-	    statValues: {
-	      minVal: 0,
-	      maxVal: 0,
-	      minDate: new Date(),
-	      maxDate: new Date()
-	    }
+	    stockList: []
 	  };
 
 	  var newState = state;
@@ -22647,8 +22641,7 @@
 	      newStockList.push(action.data);
 
 	      newState = Object.assign({}, state, {
-	        stockList: newStockList,
-	        statValues: doStatOnStock(newStockList)
+	        stockList: newStockList
 	      });
 	      break;
 	    case 'REMOVE_STOCK':
@@ -22657,8 +22650,7 @@
 	      });
 
 	      newState = Object.assign({}, state, {
-	        stockList: newStockList,
-	        statValues: doStatOnStock(newStockList)
+	        stockList: newStockList
 	      });
 	      break;
 	    case 'POST':
@@ -22692,32 +22684,6 @@
 	  }
 
 	  request.send(postData.join('&'));
-	};
-
-	var doStatOnStock = function doStatOnStock(stockList) {
-	  return stockList.reduce(function (prev, curr) {
-	    var statOnStock = curr.data.reduce(function (prevData, currData) {
-	      var date = new Date(currData[0]);
-
-	      if (!prevData) return { minVal: currData[4], maxVal: currData[4], minDate: date, maxDate: date };
-
-	      return {
-	        minVal: Math.min(currData[4], prevData.minVal),
-	        maxVal: Math.max(currData[4], prevData.maxVal),
-	        minDate: new Date(Math.min(date, prevData.minDate)),
-	        maxDate: new Date(Math.max(date, prevData.maxDate))
-	      };
-	    }, null);
-
-	    if (!prev) return statOnStock;
-
-	    return {
-	      minVal: Math.min(statOnStock.minVal, prev.minVal),
-	      maxVal: Math.max(statOnStock.maxVal, prev.maxVal),
-	      minDate: new Date(Math.min(statOnStock.minDate, prev.minDate)),
-	      maxDate: new Date(Math.max(statOnStock.maxDate, prev.maxDate))
-	    };
-	  }, null);
 	};
 
 	exports.default = reducer;
@@ -23015,7 +22981,23 @@
 
 	var ChartSide = _react2.default.createClass({
 	  displayName: 'ChartSide',
+	  getInitialState: function getInitialState() {
+	    return { resolution: 'WEEK' };
+	  },
 	  render: function render() {
+	    var _this = this;
+
+	    var activeStyle = {
+	      backgroundColor: '#eee'
+	    };
+
+	    var style = {
+	      YEAR: this.state.resolution == 'YEAR' ? activeStyle : null,
+	      MONTH: this.state.resolution == 'MONTH' ? activeStyle : null,
+	      WEEK: this.state.resolution == 'WEEK' ? activeStyle : null,
+	      DAY: this.state.resolution == 'DAY' ? activeStyle : null
+	    };
+
 	    return _react2.default.createElement(
 	      'div',
 	      { className: 'chart-side' },
@@ -23025,26 +23007,34 @@
 	        'Resolution:',
 	        _react2.default.createElement(
 	          'button',
-	          null,
+	          { style: style.YEAR, onClick: function onClick() {
+	              return _this.setState({ resolution: 'YEAR' });
+	            } },
 	          'Year'
 	        ),
 	        _react2.default.createElement(
 	          'button',
-	          null,
+	          { style: style.MONTH, onClick: function onClick() {
+	              return _this.setState({ resolution: 'MONTH' });
+	            } },
 	          'Month'
 	        ),
 	        _react2.default.createElement(
 	          'button',
-	          null,
+	          { style: style.WEEK, onClick: function onClick() {
+	              return _this.setState({ resolution: 'WEEK' });
+	            } },
 	          'Week'
 	        ),
 	        _react2.default.createElement(
 	          'button',
-	          null,
+	          { style: style.DAY, onClick: function onClick() {
+	              return _this.setState({ resolution: 'DAY' });
+	            } },
 	          'Day'
 	        )
 	      ),
-	      _react2.default.createElement(_StockChart2.default, null),
+	      _react2.default.createElement(_StockChart2.default, { resolution: this.state.resolution }),
 	      _react2.default.createElement(
 	        'small',
 	        null,
@@ -23086,6 +23076,8 @@
 
 	var _reactRedux = __webpack_require__(167);
 
+	var _getStockData = __webpack_require__(211);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var colorAsService = ['#f44336', '#4CAF50', '#FF9800', '#00BCD4', '#607D8B', '#9C27B0', '#F4511E', '#5D4037', '#1A237E', '#1B5E20', '#d50000', '#AEEA00', '#E91E63', '#004D40', '#18FFFF', '#455A64'];
@@ -23093,20 +23085,56 @@
 	var StockChart = _react2.default.createClass({
 	  displayName: 'StockChart',
 	  getInitialState: function getInitialState() {
-	    return { width: 0, height: 0 };
+	    return { width: 0, height: 400 };
 	  },
-	  componentDidMount: function componentDidMount() {
-	    this.drawChart();
+	  addGridAndAxisDaily: function addGridAndAxisDaily(stockChart, y, x) {
+	    stockChart.append('g').attr('class', 'svg-chart-grid').call(d3.axisLeft(y).tickSize(-this.state.width).tickFormat(""));
+
+	    stockChart.append('g').attr('class', 'svg-chart-grid').call(d3.axisBottom(x).ticks(d3.timeMonth).tickSize(this.state.height).tickFormat(""));
+
+	    stockChart.append("g").attr('class', 'svg-chart-axis-bottom').attr("transform", "translate(0," + (this.state.height - 1) + ")").call(d3.axisBottom(x).ticks(d3.timeDay).tickFormat(d3.timeFormat("%d")));
+
+	    stockChart.append("g").attr('class', 'svg-chart-axis-bottom').attr("transform", "translate(0," + (this.state.height + 20) + ")").call(d3.axisBottom(x).ticks(d3.timeMonth).tickFormat(d3.timeFormat("%B %Y")));
 	  },
-	  componentDidUpdate: function componentDidUpdate() {
-	    var dayTime = 24 * 60 * 60 * 1000;
-	    var widthDays = Math.round((this.props.statValues.maxDate.getTime() - this.props.statValues.minDate.getTime()) / dayTime) * 15;
+	  addGridAndAxisWeekly: function addGridAndAxisWeekly(stockChart, y, x) {
+	    stockChart.append('g').attr('class', 'svg-chart-grid').call(d3.axisLeft(y).tickSize(-this.state.width).tickFormat(""));
 
-	    if (widthDays != this.state.width) this.setState({ width: widthDays, height: 400 });
+	    stockChart.append('g').attr('class', 'svg-chart-grid').call(d3.axisBottom(x).ticks(d3.timeMonth).tickSize(this.state.height).tickFormat(""));
 
-	    this.drawChart();
+	    stockChart.append("g").attr('class', 'svg-chart-axis-bottom').attr("transform", "translate(0," + (this.state.height - 1) + ")").call(d3.axisBottom(x).ticks(d3.timeMonday).tickFormat(d3.timeFormat("%d")));
+
+	    stockChart.append("g").attr('class', 'svg-chart-axis-bottom').attr("transform", "translate(0," + (this.state.height + 20) + ")").call(d3.axisBottom(x).ticks(d3.timeMonth).tickFormat(d3.timeFormat("%B %Y")));
 	  },
 	  drawChart: function drawChart() {
+	    var splitTime = 24 * 60 * 60 * 1000;
+	    var stocksValues = null;
+	    var tickSize = 15;
+
+	    switch (this.props.resolution) {
+	      case 'DAY':
+	        stocksValues = (0, _getStockData.getStockDataDaily)(this.props.stockList);
+	        break;
+	      case 'WEEK':
+	        splitTime *= 7;
+	        stocksValues = (0, _getStockData.getStockDataWeekly)(this.props.stockList);
+	        tickSize = 20;
+	        break;
+	      case 'MONTH':
+	        splitTime *= 7 * 30;
+	        stocksValues = (0, _getStockData.getStockDataMonthly)(this.props.stockList);
+	        break;
+	      case 'YEAR':
+	        splitTime *= 7 * 30 * 365;
+	        stocksValues = (0, _getStockData.getStockDataYearly)(this.props.stockList);
+	        break;
+	    }
+
+	    if (!stocksValues.stats) return;
+
+	    var width = Math.round((stocksValues.stats.maxDate.getTime() - stocksValues.stats.minDate.getTime()) / splitTime) * tickSize;
+
+	    if (width != this.state.width) this.setState({ width: width });
+
 	    var svgNode = document.getElementsByClassName("stockChart");
 	    while (svgNode[0].firstChild) {
 	      svgNode[0].removeChild(svgNode[0].firstChild);
@@ -23115,9 +23143,9 @@
 	      svgAxisNode[0].removeChild(svgAxisNode[0].firstChild);
 	    }var stockChart = d3.select('.stockChart');
 
-	    var y = d3.scaleLinear().domain([this.props.statValues.maxVal, this.props.statValues.minVal]).range([0, this.state.height - 1]);
+	    var y = d3.scaleLinear().domain([stocksValues.stats.maxVal, stocksValues.stats.minVal]).range([0, this.state.height - 1]);
 
-	    var x = d3.scaleTime().domain([this.props.statValues.minDate, this.props.statValues.maxDate]).range([0, this.state.width]);
+	    var x = d3.scaleTime().domain([stocksValues.stats.minDate, stocksValues.stats.maxDate]).range([0, this.state.width]);
 
 	    var line = d3.line().x(function (d) {
 	      return x(d.date);
@@ -23125,28 +23153,26 @@
 	      return y(d.close);
 	    });
 
-	    stockChart.append('g').attr('class', 'svg-chart-grid').call(d3.axisLeft(y).tickSize(-this.state.width).tickFormat(""));
+	    switch (this.props.resolution) {
+	      case 'DAY':
+	        this.addGridAndAxisDaily(stockChart, y, x);
+	        break;
+	      case 'WEEK':
+	        this.addGridAndAxisWeekly(stockChart, y, x);
+	        break;
+	    }
 
-	    stockChart.append('g').attr('class', 'svg-chart-grid').call(d3.axisBottom(x).ticks(d3.timeMonth).tickSize(this.state.height).tickFormat(""));
-
-	    this.props.stockList.forEach(function (stock, idx) {
+	    stocksValues.list.forEach(function (stock, idx) {
 	      var stockNode = stockChart.append("path").attr('id', 'path' + stock.id).attr("fill", "none").attr("stroke", colorAsService[idx % colorAsService.length]).attr("stroke-linejoin", "round").attr("stroke-linecap", "round").attr("stroke-width", 1.5);
 
-	      stockNode.datum(stock.data.map(function (data) {
-	        return {
-	          date: new Date(data[0]),
-	          close: +data[4]
-	        };
-	      })).attr("d", line);
+	      stockNode.datum(stock.data).attr("d", line);
 	    });
 
 	    d3.select('.stockChartYAxis').append("g").attr('class', 'svg-chart-axis-right').call(d3.axisRight(y)).append("text").attr("y", 6).attr("dy", "0.71em").attr("text-anchor", "end").text("Price");
-
-	    stockChart.append("g").attr('class', 'svg-chart-axis-bottom').attr("transform", "translate(0," + (this.state.height - 1) + ")").call(d3.axisBottom(x).ticks(d3.timeDay).tickFormat(d3.timeFormat("%d")));
-
-	    stockChart.append("g").attr('class', 'svg-chart-axis-bottom').attr("transform", "translate(0," + (this.state.height + 20) + ")").call(d3.axisBottom(x).ticks(d3.timeMonth).tickFormat(d3.timeFormat("%B %Y")));
 	  },
 	  render: function render() {
+	    this.drawChart();
+
 	    return _react2.default.createElement(
 	      'div',
 	      null,
@@ -23177,6 +23203,131 @@
 	})(StockChart);
 
 	exports.default = ConnectedStockChart;
+
+/***/ },
+/* 211 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var stockListStats = function stockListStats(stockList) {
+	  return stockList.reduce(function (prev, curr) {
+	    var statOnStock = curr.data.reduce(function (prevData, currData) {
+	      if (!prevData) return {
+	        minVal: currData.close,
+	        maxVal: currData.close,
+	        minDate: currData.date,
+	        maxDate: currData.date
+	      };
+
+	      return {
+	        minVal: Math.min(currData.close, prevData.minVal),
+	        maxVal: Math.max(currData.close, prevData.maxVal),
+	        minDate: new Date(Math.min(currData.date, prevData.minDate)),
+	        maxDate: new Date(Math.max(currData.date, prevData.maxDate))
+	      };
+	    }, null);
+
+	    if (!prev) return statOnStock;
+
+	    return {
+	      minVal: Math.min(statOnStock.minVal, prev.minVal),
+	      maxVal: Math.max(statOnStock.maxVal, prev.maxVal),
+	      minDate: new Date(Math.min(statOnStock.minDate, prev.minDate)),
+	      maxDate: new Date(Math.max(statOnStock.maxDate, prev.maxDate))
+	    };
+	  }, null);
+	};
+
+	var getStockDataDaily = exports.getStockDataDaily = function getStockDataDaily(stockList) {
+	  var stockListDaily = stockList.map(function (stock) {
+	    return Object.assign({}, stock, {
+	      data: stock.data.map(function (data) {
+	        return {
+	          date: new Date(data[0]),
+	          close: +data[4]
+	        };
+	      })
+	    });
+	  });
+
+	  return {
+	    stats: stockListStats(stockListDaily),
+	    list: stockListDaily
+	  };
+	};
+
+	var getStockDataWeekly = exports.getStockDataWeekly = function getStockDataWeekly(stockList) {
+	  var stockListWeekly = stockList.map(function (stock) {
+	    var weekData = [{
+	      date: null,
+	      close: 0,
+	      records: 0,
+	      last_date: null
+	    }];
+
+	    var dayTime = 24 * 60 * 60 * 1000;
+	    var weekTime = 7 * dayTime;
+
+	    stock.data = stock.data.sort(function (a, b) {
+	      return new Date(a[0]) - new Date(b[0]);
+	    });
+
+	    for (var idx in stock.data) {
+	      var currDate = new Date(stock.data[idx][0]);
+
+	      if (idx == 0) {
+	        weekData[weekData.length - 1].close += +stock.data[idx][4];
+	        weekData[weekData.length - 1].records++;
+	        weekData[weekData.length - 1].last_date = currDate;
+	        continue;
+	      }
+
+	      if (currDate.getDay() != 1 && +idx + 1 < stock.data.length && Math.abs(weekData[weekData.length - 1].last_date.getTime() - currDate.getTime()) < weekTime) {
+	        weekData[weekData.length - 1].close += +stock.data[idx][4];
+	        weekData[weekData.length - 1].records++;
+	        continue;
+	      }
+
+	      weekData[weekData.length - 1].date = currDate;
+	      if (weekData[weekData.length - 1].records) {
+	        weekData[weekData.length - 1].close += +stock.data[idx][4];
+	        weekData[weekData.length - 1].close /= weekData[weekData.length - 1].records;
+	      } else weekData[weekData.length - 1].close = weekData[weekData.length - 2].close;
+
+	      if (+idx + 1 < stock.data.length) {
+	        weekData.push({
+	          date: null,
+	          close: 0,
+	          records: 0,
+	          last_date: new Date(currDate.getTime() - dayTime)
+	        });
+	      }
+	    }
+
+	    return Object.assign({}, stock, { data: weekData });
+	  });
+
+	  console.log({
+	    stats: stockListStats(stockListWeekly),
+	    list: stockListWeekly
+	  });
+
+	  return {
+	    stats: stockListStats(stockListWeekly),
+	    list: stockListWeekly
+	  };
+	};
+
+	var getStockDataMonthly = exports.getStockDataMonthly = function getStockDataMonthly() {
+	  return {};
+	};
+	var getStockDataYearly = exports.getStockDataYearly = function getStockDataYearly() {
+	  return {};
+	};
 
 /***/ }
 /******/ ]);
