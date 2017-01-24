@@ -85,6 +85,69 @@ const StockChart = React.createClass ({
           .tickFormat (d3.timeFormat ("%B %Y"))
       );
   },
+  addGridAndAxisMonthly (stockChart, y, x) {
+    stockChart.append ('g')
+      .attr ('class', 'svg-chart-grid')
+      .call (
+        d3.axisLeft (y)
+          .tickSize (-this.state.width)
+          .tickFormat ("")
+      );
+
+    stockChart.append ('g')
+      .attr ('class', 'svg-chart-grid')
+      .call (
+        d3.axisBottom (x)
+          .ticks (d3.timeYear)
+          .tickSize (this.state.height)
+          .tickFormat ("")
+      );
+
+    stockChart.append ("g")
+      .attr ('class', 'svg-chart-axis-bottom')
+      .attr ("transform", "translate(0," + (this.state.height - 1) + ")")
+      .call (
+        d3.axisBottom (x)
+          .ticks (d3.timeMonth)
+          .tickFormat (d3.timeFormat ("%B"))
+      );
+
+    stockChart.append ("g")
+      .attr ('class', 'svg-chart-axis-bottom')
+      .attr ("transform", "translate(0," + (this.state.height + 20) + ")")
+      .call (
+        d3.axisBottom (x)
+          .ticks (d3.timeYear)
+          .tickFormat (d3.timeFormat ("%Y"))
+      );
+  },
+  addGridAndAxisYearly (stockChart, y, x) {
+    stockChart.append ('g')
+      .attr ('class', 'svg-chart-grid')
+      .call (
+        d3.axisLeft (y)
+          .tickSize (-this.state.width)
+          .tickFormat ("")
+      );
+
+    stockChart.append ('g')
+      .attr ('class', 'svg-chart-grid')
+      .call (
+        d3.axisBottom (x)
+          .ticks (d3.timeYear.every (5))
+          .tickSize (this.state.height)
+          .tickFormat ("")
+      );
+
+    stockChart.append ("g")
+      .attr ('class', 'svg-chart-axis-bottom')
+      .attr ("transform", "translate(0," + (this.state.height - 1) + ")")
+      .call (
+        d3.axisBottom (x)
+          .ticks (d3.timeYear)
+          .tickFormat (d3.timeFormat ("%Y"))
+      );
+  },
   drawChart () {
     let splitTime = 24 * 60 * 60 * 1000;
     let stocksValues = null;
@@ -100,12 +163,14 @@ const StockChart = React.createClass ({
         tickSize = 20;
         break;
       case 'MONTH':
-        splitTime *= 7 * 30;
+        splitTime *= 30;
         stocksValues = getStockDataMonthly (this.props.stockList);
+        tickSize = 50;
         break;
       case 'YEAR':
-        splitTime *= 7 * 30 * 365;
+        splitTime *= 365;
         stocksValues = getStockDataYearly (this.props.stockList);
+        tickSize = 100;
         break;
     }
 
@@ -145,6 +210,12 @@ const StockChart = React.createClass ({
         break;
       case 'WEEK':
         this.addGridAndAxisWeekly (stockChart, y, x);
+        break;
+      case 'MONTH':
+        this.addGridAndAxisMonthly (stockChart, y, x);
+        break;
+      case 'YEAR':
+        this.addGridAndAxisYearly (stockChart, y, x);
         break;
     }
 

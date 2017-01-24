@@ -23105,6 +23105,22 @@
 
 	    stockChart.append("g").attr('class', 'svg-chart-axis-bottom').attr("transform", "translate(0," + (this.state.height + 20) + ")").call(d3.axisBottom(x).ticks(d3.timeMonth).tickFormat(d3.timeFormat("%B %Y")));
 	  },
+	  addGridAndAxisMonthly: function addGridAndAxisMonthly(stockChart, y, x) {
+	    stockChart.append('g').attr('class', 'svg-chart-grid').call(d3.axisLeft(y).tickSize(-this.state.width).tickFormat(""));
+
+	    stockChart.append('g').attr('class', 'svg-chart-grid').call(d3.axisBottom(x).ticks(d3.timeYear).tickSize(this.state.height).tickFormat(""));
+
+	    stockChart.append("g").attr('class', 'svg-chart-axis-bottom').attr("transform", "translate(0," + (this.state.height - 1) + ")").call(d3.axisBottom(x).ticks(d3.timeMonth).tickFormat(d3.timeFormat("%B")));
+
+	    stockChart.append("g").attr('class', 'svg-chart-axis-bottom').attr("transform", "translate(0," + (this.state.height + 20) + ")").call(d3.axisBottom(x).ticks(d3.timeYear).tickFormat(d3.timeFormat("%Y")));
+	  },
+	  addGridAndAxisYearly: function addGridAndAxisYearly(stockChart, y, x) {
+	    stockChart.append('g').attr('class', 'svg-chart-grid').call(d3.axisLeft(y).tickSize(-this.state.width).tickFormat(""));
+
+	    stockChart.append('g').attr('class', 'svg-chart-grid').call(d3.axisBottom(x).ticks(d3.timeYear.every(5)).tickSize(this.state.height).tickFormat(""));
+
+	    stockChart.append("g").attr('class', 'svg-chart-axis-bottom').attr("transform", "translate(0," + (this.state.height - 1) + ")").call(d3.axisBottom(x).ticks(d3.timeYear).tickFormat(d3.timeFormat("%Y")));
+	  },
 	  drawChart: function drawChart() {
 	    var splitTime = 24 * 60 * 60 * 1000;
 	    var stocksValues = null;
@@ -23120,12 +23136,14 @@
 	        tickSize = 20;
 	        break;
 	      case 'MONTH':
-	        splitTime *= 7 * 30;
+	        splitTime *= 30;
 	        stocksValues = (0, _getStockData.getStockDataMonthly)(this.props.stockList);
+	        tickSize = 50;
 	        break;
 	      case 'YEAR':
-	        splitTime *= 7 * 30 * 365;
+	        splitTime *= 365;
 	        stocksValues = (0, _getStockData.getStockDataYearly)(this.props.stockList);
+	        tickSize = 100;
 	        break;
 	    }
 
@@ -23159,6 +23177,12 @@
 	        break;
 	      case 'WEEK':
 	        this.addGridAndAxisWeekly(stockChart, y, x);
+	        break;
+	      case 'MONTH':
+	        this.addGridAndAxisMonthly(stockChart, y, x);
+	        break;
+	      case 'YEAR':
+	        this.addGridAndAxisYearly(stockChart, y, x);
 	        break;
 	    }
 
@@ -23311,22 +23335,124 @@
 	    return Object.assign({}, stock, { data: weekData });
 	  });
 
-	  console.log({
-	    stats: stockListStats(stockListWeekly),
-	    list: stockListWeekly
-	  });
-
 	  return {
 	    stats: stockListStats(stockListWeekly),
 	    list: stockListWeekly
 	  };
 	};
 
-	var getStockDataMonthly = exports.getStockDataMonthly = function getStockDataMonthly() {
-	  return {};
+	var getStockDataMonthly = exports.getStockDataMonthly = function getStockDataMonthly(stockList) {
+	  var stockListMonthly = stockList.map(function (stock) {
+	    var monthData = [{
+	      date: null,
+	      close: 0,
+	      records: 0,
+	      last_date: null
+	    }];
+
+	    var dayTime = 24 * 60 * 60 * 1000;
+	    var monthTime = 31 * dayTime;
+
+	    stock.data = stock.data.sort(function (a, b) {
+	      return new Date(a[0]) - new Date(b[0]);
+	    });
+
+	    for (var idx in stock.data) {
+	      var currDate = new Date(stock.data[idx][0]);
+
+	      if (idx == 0) {
+	        monthData[monthData.length - 1].close += +stock.data[idx][4];
+	        monthData[monthData.length - 1].records++;
+	        monthData[monthData.length - 1].last_date = currDate;
+	        continue;
+	      }
+
+	      if (currDate.getMonth() == monthData[monthData.length - 1].last_date.getMonth() && +idx + 1 < stock.data.length && Math.abs(monthData[monthData.length - 1].last_date.getTime() - currDate.getTime()) < monthTime) {
+	        monthData[monthData.length - 1].close += +stock.data[idx][4];
+	        monthData[monthData.length - 1].records++;
+	        continue;
+	      }
+
+	      monthData[monthData.length - 1].date = currDate;
+	      if (monthData[monthData.length - 1].records) {
+	        monthData[monthData.length - 1].close += +stock.data[idx][4];
+	        monthData[monthData.length - 1].close /= monthData[monthData.length - 1].records;
+	      } else monthData[monthData.length - 1].close = monthData[monthData.length - 2].close;
+
+	      if (+idx + 1 < stock.data.length) {
+	        monthData.push({
+	          date: null,
+	          close: 0,
+	          records: 0,
+	          last_date: new Date(currDate.getTime() - dayTime)
+	        });
+	      }
+	    }
+
+	    return Object.assign({}, stock, { data: monthData });
+	  });
+
+	  return {
+	    stats: stockListStats(stockListMonthly),
+	    list: stockListMonthly
+	  };
 	};
-	var getStockDataYearly = exports.getStockDataYearly = function getStockDataYearly() {
-	  return {};
+
+	var getStockDataYearly = exports.getStockDataYearly = function getStockDataYearly(stockList) {
+	  var stockListYearly = stockList.map(function (stock) {
+	    var yearData = [{
+	      date: null,
+	      close: 0,
+	      records: 0,
+	      last_date: null
+	    }];
+
+	    var dayTime = 24 * 60 * 60 * 1000;
+	    var yearTime = 365 * dayTime;
+
+	    stock.data = stock.data.sort(function (a, b) {
+	      return new Date(a[0]) - new Date(b[0]);
+	    });
+
+	    for (var idx in stock.data) {
+	      var currDate = new Date(stock.data[idx][0]);
+
+	      if (idx == 0) {
+	        yearData[yearData.length - 1].close += +stock.data[idx][4];
+	        yearData[yearData.length - 1].records++;
+	        yearData[yearData.length - 1].last_date = currDate;
+	        continue;
+	      }
+
+	      if (currDate.getYear() == yearData[yearData.length - 1].last_date.getYear() && +idx + 1 < stock.data.length && Math.abs(yearData[yearData.length - 1].last_date.getTime() - currDate.getTime()) < yearTime) {
+	        yearData[yearData.length - 1].close += +stock.data[idx][4];
+	        yearData[yearData.length - 1].records++;
+	        continue;
+	      }
+
+	      yearData[yearData.length - 1].date = currDate;
+	      if (yearData[yearData.length - 1].records) {
+	        yearData[yearData.length - 1].close += +stock.data[idx][4];
+	        yearData[yearData.length - 1].close /= yearData[yearData.length - 1].records;
+	      } else yearData[yearData.length - 1].close = yearData[yearData.length - 2].close;
+
+	      if (+idx + 1 < stock.data.length) {
+	        yearData.push({
+	          date: null,
+	          close: 0,
+	          records: 0,
+	          last_date: new Date(currDate.getTime() - dayTime)
+	        });
+	      }
+	    }
+
+	    return Object.assign({}, stock, { data: yearData });
+	  });
+
+	  return {
+	    stats: stockListStats(stockListYearly),
+	    list: stockListYearly
+	  };
 	};
 
 /***/ }

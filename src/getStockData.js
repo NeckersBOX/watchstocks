@@ -94,16 +94,124 @@ export const getStockDataWeekly = (stockList) => {
     return Object.assign ({}, stock, { data: weekData });
   });
 
-  console.log ({
-    stats: stockListStats (stockListWeekly),
-    list: stockListWeekly
-  });
-
   return {
     stats: stockListStats (stockListWeekly),
     list: stockListWeekly
   };
 };
 
-export const getStockDataMonthly = () => ({});
-export const getStockDataYearly = () => ({});
+export const getStockDataMonthly = (stockList) => {
+  let stockListMonthly = stockList.map (stock => {
+    let monthData = [{
+      date: null,
+      close: 0,
+      records: 0,
+      last_date: null
+    }];
+
+    const dayTime = 24 * 60 * 60 * 1000;
+    const monthTime = 31 * dayTime;
+
+    stock.data = stock.data.sort ((a, b) => new Date (a[0]) - new Date (b[0]));
+
+    for ( let idx in stock.data ) {
+      let currDate = new Date (stock.data[idx][0]);
+
+      if ( idx == 0 ) {
+        monthData[monthData.length - 1].close += +stock.data[idx][4];
+        monthData[monthData.length - 1].records++;
+        monthData[monthData.length - 1].last_date = currDate;
+        continue;
+      }
+
+      if ( currDate.getMonth () == monthData[monthData.length - 1].last_date.getMonth ()
+        && (+idx + 1) < stock.data.length
+        && Math.abs (monthData[monthData.length - 1].last_date.getTime () - currDate.getTime ()) < monthTime ) {
+        monthData[monthData.length - 1].close += +stock.data[idx][4];
+        monthData[monthData.length - 1].records++;
+        continue;
+      }
+
+      monthData[monthData.length - 1].date = currDate;
+      if ( monthData[monthData.length - 1].records ) {
+        monthData[monthData.length - 1].close += +stock.data[idx][4];
+        monthData[monthData.length - 1].close /= monthData[monthData.length - 1].records;
+      }
+      else monthData[monthData.length - 1].close = monthData[monthData.length - 2].close;
+
+      if ( (+idx + 1) < stock.data.length ) {
+        monthData.push ({
+          date: null,
+          close: 0,
+          records: 0,
+          last_date: new Date (currDate.getTime () - dayTime)
+        });
+      }
+    }
+
+    return Object.assign ({}, stock, { data: monthData });
+  });
+
+  return {
+    stats: stockListStats (stockListMonthly),
+    list: stockListMonthly
+  };
+};
+
+export const getStockDataYearly = (stockList) => {
+  let stockListYearly = stockList.map (stock => {
+    let yearData = [{
+      date: null,
+      close: 0,
+      records: 0,
+      last_date: null
+    }];
+
+    const dayTime = 24 * 60 * 60 * 1000;
+    const yearTime = 365 * dayTime;
+
+    stock.data = stock.data.sort ((a, b) => new Date (a[0]) - new Date (b[0]));
+
+    for ( let idx in stock.data ) {
+      let currDate = new Date (stock.data[idx][0]);
+
+      if ( idx == 0 ) {
+        yearData[yearData.length - 1].close += +stock.data[idx][4];
+        yearData[yearData.length - 1].records++;
+        yearData[yearData.length - 1].last_date = currDate;
+        continue;
+      }
+
+      if ( currDate.getYear () == yearData[yearData.length - 1].last_date.getYear ()
+        && (+idx + 1) < stock.data.length
+        && Math.abs (yearData[yearData.length - 1].last_date.getTime () - currDate.getTime ()) < yearTime ) {
+        yearData[yearData.length - 1].close += +stock.data[idx][4];
+        yearData[yearData.length - 1].records++;
+        continue;
+      }
+
+      yearData[yearData.length - 1].date = currDate;
+      if ( yearData[yearData.length - 1].records ) {
+        yearData[yearData.length - 1].close += +stock.data[idx][4];
+        yearData[yearData.length - 1].close /= yearData[yearData.length - 1].records;
+      }
+      else yearData[yearData.length - 1].close = yearData[yearData.length - 2].close;
+
+      if ( (+idx + 1) < stock.data.length ) {
+        yearData.push ({
+          date: null,
+          close: 0,
+          records: 0,
+          last_date: new Date (currDate.getTime () - dayTime)
+        });
+      }
+    }
+
+    return Object.assign ({}, stock, { data: yearData });
+  });
+
+  return {
+    stats: stockListStats (stockListYearly),
+    list: stockListYearly
+  };
+};

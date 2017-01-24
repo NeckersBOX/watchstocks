@@ -73,10 +73,12 @@ body
   z-index: 50
 
 .chart-container
-  overflow: auto
+  overflow-x: scroll
+  overflow-y: hidden
   background-color: #333
   width: calc(100% - 50px)
   display: inline-block
+  text-align: right
 
 .chart-axis
   display: inline-block
@@ -106,7 +108,7 @@ body
 .svg-chart-grid
   path, line
     stroke: #444
-    
+
 .resolutionPanel
   padding: 10px 0
   background-color: #fff
