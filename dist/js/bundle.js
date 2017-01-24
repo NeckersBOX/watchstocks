@@ -23100,7 +23100,7 @@
 	  },
 	  componentDidUpdate: function componentDidUpdate() {
 	    var dayTime = 24 * 60 * 60 * 1000;
-	    var widthDays = Math.round((this.props.statValues.maxDate.getTime() - this.props.statValues.minDate.getTime()) / dayTime) * 5;
+	    var widthDays = Math.round((this.props.statValues.maxDate.getTime() - this.props.statValues.minDate.getTime()) / dayTime) * 15;
 
 	    if (widthDays != this.state.width) this.setState({ width: widthDays, height: 400 });
 
@@ -23110,9 +23110,12 @@
 	    var svgNode = document.getElementsByClassName("stockChart");
 	    while (svgNode[0].firstChild) {
 	      svgNode[0].removeChild(svgNode[0].firstChild);
+	    }var svgAxisNode = document.getElementsByClassName('stockChartYAxis');
+	    while (svgAxisNode[0].firstChild) {
+	      svgAxisNode[0].removeChild(svgAxisNode[0].firstChild);
 	    }var stockChart = d3.select('.stockChart');
 
-	    var y = d3.scaleLinear().domain([this.props.statValues.minVal, this.props.statValues.maxVal]).range([0, this.state.height]);
+	    var y = d3.scaleLinear().domain([this.props.statValues.maxVal, this.props.statValues.minVal]).range([0, this.state.height - 1]);
 
 	    var x = d3.scaleTime().domain([this.props.statValues.minDate, this.props.statValues.maxDate]).range([0, this.state.width]);
 
@@ -23121,6 +23124,10 @@
 	    }).y(function (d) {
 	      return y(d.close);
 	    });
+
+	    stockChart.append('g').attr('class', 'svg-chart-grid').call(d3.axisLeft(y).tickSize(-this.state.width).tickFormat(""));
+
+	    stockChart.append('g').attr('class', 'svg-chart-grid').call(d3.axisBottom(x).ticks(d3.timeMonth).tickSize(this.state.height).tickFormat(""));
 
 	    this.props.stockList.forEach(function (stock, idx) {
 	      var stockNode = stockChart.append("path").attr('id', 'path' + stock.id).attr("fill", "none").attr("stroke", colorAsService[idx % colorAsService.length]).attr("stroke-linejoin", "round").attr("stroke-linecap", "round").attr("stroke-width", 1.5);
@@ -23132,6 +23139,12 @@
 	        };
 	      })).attr("d", line);
 	    });
+
+	    d3.select('.stockChartYAxis').append("g").attr('class', 'svg-chart-axis-right').call(d3.axisRight(y)).append("text").attr("y", 6).attr("dy", "0.71em").attr("text-anchor", "end").text("Price");
+
+	    stockChart.append("g").attr('class', 'svg-chart-axis-bottom').attr("transform", "translate(0," + (this.state.height - 1) + ")").call(d3.axisBottom(x).ticks(d3.timeDay).tickFormat(d3.timeFormat("%d")));
+
+	    stockChart.append("g").attr('class', 'svg-chart-axis-bottom').attr("transform", "translate(0," + (this.state.height + 20) + ")").call(d3.axisBottom(x).ticks(d3.timeMonth).tickFormat(d3.timeFormat("%B %Y")));
 	  },
 	  render: function render() {
 	    return _react2.default.createElement(
@@ -23140,7 +23153,12 @@
 	      _react2.default.createElement(
 	        'div',
 	        { className: 'chart-container' },
-	        _react2.default.createElement('svg', { height: this.state.height, width: this.state.width, className: 'stockChart' })
+	        _react2.default.createElement('svg', { height: this.state.height + 50, width: this.state.width, className: 'stockChart' })
+	      ),
+	      _react2.default.createElement(
+	        'div',
+	        { className: 'chart-axis' },
+	        _react2.default.createElement('svg', { height: this.state.height + 50, width: 50, className: 'stockChartYAxis' })
 	      ),
 	      this.props.stockList.map(function (stock, idx) {
 	        return _react2.default.createElement(
