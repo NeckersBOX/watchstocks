@@ -241,6 +241,12 @@ const StockChart = React.createClass ({
         .text ("Price");
   },
   render () {
+    if ( this.props.stockList.length < 1 ) {
+      return (
+        <h2 style={{ textAlign: 'center' }}>No stock found.</h2>
+      );
+    }
+
     this.drawChart ();
 
     return (

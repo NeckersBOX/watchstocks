@@ -23195,6 +23195,14 @@
 	    d3.select('.stockChartYAxis').append("g").attr('class', 'svg-chart-axis-right').call(d3.axisRight(y)).append("text").attr("y", 6).attr("dy", "0.71em").attr("text-anchor", "end").text("Price");
 	  },
 	  render: function render() {
+	    if (this.props.stockList.length < 1) {
+	      return _react2.default.createElement(
+	        'h2',
+	        { style: { textAlign: 'center' } },
+	        'No stock found.'
+	      );
+	    }
+
 	    this.drawChart();
 
 	    return _react2.default.createElement(
