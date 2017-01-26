@@ -31981,7 +31981,7 @@
 	      weekData[weekData.length - 1].date = currDate;
 	      if (weekData[weekData.length - 1].records) {
 	        weekData[weekData.length - 1].close += +stock.data[idx][4];
-	        weekData[weekData.length - 1].close /= weekData[weekData.length - 1].records;
+	        weekData[weekData.length - 1].close /= weekData[weekData.length - 1].records + 1;
 	      } else weekData[weekData.length - 1].close = weekData[weekData.length - 2].close;
 
 	      if (+idx + 1 < stock.data.length) {
@@ -32038,7 +32038,7 @@
 	      monthData[monthData.length - 1].date = currDate;
 	      if (monthData[monthData.length - 1].records) {
 	        monthData[monthData.length - 1].close += +stock.data[idx][4];
-	        monthData[monthData.length - 1].close /= monthData[monthData.length - 1].records;
+	        monthData[monthData.length - 1].close /= monthData[monthData.length - 1].records + 1;
 	      } else monthData[monthData.length - 1].close = monthData[monthData.length - 2].close;
 
 	      if (+idx + 1 < stock.data.length) {
@@ -32095,7 +32095,7 @@
 	      yearData[yearData.length - 1].date = currDate;
 	      if (yearData[yearData.length - 1].records) {
 	        yearData[yearData.length - 1].close += +stock.data[idx][4];
-	        yearData[yearData.length - 1].close /= yearData[yearData.length - 1].records;
+	        yearData[yearData.length - 1].close /= yearData[yearData.length - 1].records + 1;
 	      } else yearData[yearData.length - 1].close = yearData[yearData.length - 2].close;
 
 	      if (+idx + 1 < stock.data.length) {
