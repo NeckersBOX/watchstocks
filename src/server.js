@@ -90,5 +90,5 @@ app.post ('/get-stock', (req, res) => {
 let io = SocketIO (app.listen (process.env.PORT || 3000));
 
 io.on ('connection', socket => {
-  console.log ('user connected');
+  socket.on ('add_stock', data => socket.broadcast.emit ('new_stock', data));
 });

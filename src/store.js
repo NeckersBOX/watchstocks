@@ -1,5 +1,3 @@
-import io from 'socket.io-client';
-
 const reducer = (state, action) => {
   if ( typeof state === 'undefined' )
     return {
@@ -15,6 +13,9 @@ const reducer = (state, action) => {
       newStockList = state.stockList.slice ();
       newStockList.push (action.data);
 
+      if ( state.socket_io )
+        state.socket_io.emit ('add_stock', action.data);
+
       newState = Object.assign ({}, state, {
         stockList: newStockList
       });
@@ -27,7 +28,7 @@ const reducer = (state, action) => {
       });
       break;
     case 'INIT_SOCKET.IO':
-      newState = Object.assign ({}, state, { socket_io: io () });
+      newState = Object.assign ({}, state, { socket_io: action.data });
       break;
     case 'POST':
       postRequest (action.url, action.data, action.callback);

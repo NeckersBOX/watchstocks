@@ -20259,7 +20259,7 @@
 
 	var _store2 = _interopRequireDefault(_store);
 
-	var _Layout = __webpack_require__(258);
+	var _Layout = __webpack_require__(206);
 
 	var _Layout2 = _interopRequireDefault(_Layout);
 
@@ -22620,20 +22620,13 @@
 
 /***/ },
 /* 205 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-
-	var _socket = __webpack_require__(206);
-
-	var _socket2 = _interopRequireDefault(_socket);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 	var reducer = function reducer(state, action) {
 	  if (typeof state === 'undefined') return {
 	    stockList: [],
@@ -22647,6 +22640,8 @@
 	    case 'ADD_STOCK':
 	      newStockList = state.stockList.slice();
 	      newStockList.push(action.data);
+
+	      if (state.socket_io) state.socket_io.emit('add_stock', action.data);
 
 	      newState = Object.assign({}, state, {
 	        stockList: newStockList
@@ -22662,7 +22657,7 @@
 	      });
 	      break;
 	    case 'INIT_SOCKET.IO':
-	      newState = Object.assign({}, state, { socket_io: (0, _socket2.default)() });
+	      newState = Object.assign({}, state, { socket_io: action.data });
 	      break;
 	    case 'POST':
 	      postRequest(action.url, action.data, action.callback);
@@ -22705,16 +22700,319 @@
 
 	'use strict';
 
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _SearchSide = __webpack_require__(207);
+
+	var _SearchSide2 = _interopRequireDefault(_SearchSide);
+
+	var _ChartSide = __webpack_require__(261);
+
+	var _ChartSide2 = _interopRequireDefault(_ChartSide);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var Layout = _react2.default.createClass({
+	  displayName: 'Layout',
+	  render: function render() {
+	    return _react2.default.createElement(
+	      'div',
+	      { className: 'layout' },
+	      _react2.default.createElement(_SearchSide2.default, null),
+	      _react2.default.createElement(_ChartSide2.default, null)
+	    );
+	  }
+	});
+
+	exports.default = Layout;
+
+/***/ },
+/* 207 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactRedux = __webpack_require__(167);
+
+	var _StockInfo = __webpack_require__(208);
+
+	var _StockInfo2 = _interopRequireDefault(_StockInfo);
+
+	var _socket = __webpack_require__(209);
+
+	var _socket2 = _interopRequireDefault(_socket);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var SearchSide = _react2.default.createClass({
+	  displayName: 'SearchSide',
+	  getInitialState: function getInitialState() {
+	    return {
+	      searchStock: '',
+	      stockList: [],
+	      lastRequest: 0,
+	      loadingSuggest: false,
+	      loadingStock: false
+	    };
+	  },
+	  componentDidMount: function componentDidMount() {
+	    var _this = this;
+
+	    if (typeof window != 'undefined') {
+	      var socket_io = (0, _socket2.default)();
+
+	      socket_io.on('new_stock', function (data) {
+	        var stock_exists = false;
+
+	        for (var stockIdx in _this.props.stockList) {
+	          if (_this.props.stockList[stockIdx].dataset_code == data.dataset_code) {
+	            stock_exists = true;
+	            break;
+	          }
+	        }
+
+	        if (!stock_exists) _this.props.dispatch({
+	          type: 'ADD_STOCK',
+	          data: data
+	        });
+	      });
+
+	      this.props.dispatch({
+	        type: 'INIT_SOCKET.IO',
+	        data: socket_io
+	      });
+	    }
+	  },
+	  render: function render() {
+	    return _react2.default.createElement(
+	      'div',
+	      { className: 'search-side' },
+	      _react2.default.createElement(
+	        'h1',
+	        null,
+	        'SEARCH STOCK'
+	      ),
+	      this.state.loadingSuggest ? _react2.default.createElement(
+	        'small',
+	        null,
+	        'Loading list for ',
+	        this.state.searchStock,
+	        '..'
+	      ) : _react2.default.createElement(
+	        'small',
+	        null,
+	        'No suggestions, search for more'
+	      ),
+	      _react2.default.createElement(
+	        'form',
+	        { className: 'search-form' },
+	        _react2.default.createElement('input', { type: 'text', list: 'stockList', onChange: this.editSearch,
+	          placeholder: 'Stock name', value: this.state.searchStock }),
+	        _react2.default.createElement(
+	          'datalist',
+	          { id: 'stockList' },
+	          this.state.stockList.map(function (val, idx) {
+	            return _react2.default.createElement('option', { key: idx, value: val.dataset_code });
+	          })
+	        ),
+	        _react2.default.createElement(
+	          'button',
+	          { type: 'submit', onClick: this.addStock },
+	          _react2.default.createElement(
+	            'i',
+	            { className: 'material-icons' },
+	            'search'
+	          )
+	        )
+	      ),
+	      _react2.default.createElement('hr', null),
+	      this.state.loadingStock ? _react2.default.createElement(
+	        'small',
+	        null,
+	        'Loading ',
+	        this.state.searchStock,
+	        '..'
+	      ) : '',
+	      this.props.stockList.map(function (stock, idx) {
+	        return _react2.default.createElement(_StockInfo2.default, _extends({ key: idx }, stock));
+	      })
+	    );
+	  },
+	  editSearch: function editSearch(e) {
+	    var _this2 = this;
+
+	    var requestTime = new Date().getTime();
+	    var searchStock = e.target.value.toUpperCase().split('').filter(function (val) {
+	      return (/[A-Za-z]/.test(val)
+	      );
+	    }).join('');
+
+	    if (searchStock.length < 1) return this.setState({ searchStock: searchStock, stockList: [] });else this.setState({ searchStock: searchStock });
+
+	    if (requestTime < this.state.lastRequest + 300) return;
+
+	    this.setState({ lastRequest: requestTime, loadingSuggest: true });
+
+	    this.props.dispatch({
+	      type: 'POST',
+	      url: '/search-stock',
+	      data: {
+	        query: searchStock
+	      },
+	      callback: function callback(res) {
+	        if (res.error) {
+	          _this2.setState({ stockList: [], lastRequest: requestTime, loadingSuggest: false });
+	          return console.warn(res.error);
+	        }
+
+	        if (res.query != _this2.state.searchStock) {
+	          _this2.setState({
+	            stockList: res.query.length < _this2.state.searchStock.length ? res.stockList : [],
+	            lastRequest: res.requestTime,
+	            loadingSuggest: false
+	          });
+	        } else {
+	          _this2.setState({
+	            stockList: res.stockList,
+	            lastRequest: res.requestTime,
+	            loadingSuggest: false
+	          });
+	        }
+	      }
+	    });
+	  },
+	  addStock: function addStock(e) {
+	    var _this3 = this;
+
+	    e.preventDefault();
+
+	    if (this.state.searchStock.length < 1) return;
+
+	    if (this.props.stockList.filter(function (stock) {
+	      return stock.dataset_code == _this3.state.searchStock;
+	    }).length) return;
+
+	    this.setState({ loadingStock: true });
+
+	    this.props.dispatch({
+	      type: 'POST',
+	      url: '/get-stock',
+	      data: {
+	        query: this.state.searchStock
+	      },
+	      callback: function callback(res) {
+	        _this3.setState({ loadingStock: false });
+
+	        if (res.error) return console.warn(res.error);
+
+	        _this3.props.dispatch({
+	          type: 'ADD_STOCK',
+	          data: res.stockData
+	        });
+	      }
+	    });
+	  }
+	});
+
+	var ConnectedSearchSide = (0, _reactRedux.connect)(function (state) {
+	  return state;
+	})(SearchSide);
+
+	exports.default = ConnectedSearchSide;
+
+/***/ },
+/* 208 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactRedux = __webpack_require__(167);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var StockInfo = _react2.default.createClass({
+	  displayName: 'StockInfo',
+	  render: function render() {
+	    return _react2.default.createElement(
+	      'div',
+	      { className: 'stock-info' },
+	      _react2.default.createElement(
+	        'h2',
+	        null,
+	        this.props.dataset_code,
+	        ' ',
+	        _react2.default.createElement(
+	          'small',
+	          null,
+	          this.props.database_code
+	        ),
+	        _react2.default.createElement(
+	          'i',
+	          { onClick: this.removeStock, className: 'remove material-icons' },
+	          'close'
+	        )
+	      ),
+	      _react2.default.createElement(
+	        'p',
+	        null,
+	        this.props.name
+	      )
+	    );
+	  },
+	  removeStock: function removeStock() {
+	    this.props.dispatch({
+	      type: 'REMOVE_STOCK',
+	      id: this.props.id
+	    });
+	  }
+	});
+
+	var ConnectedStockInfo = (0, _reactRedux.connect)(function (state) {
+	  return {};
+	})(StockInfo);
+
+	exports.default = ConnectedStockInfo;
+
+/***/ },
+/* 209 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var url = __webpack_require__(207);
-	var parser = __webpack_require__(212);
-	var Manager = __webpack_require__(222);
-	var debug = __webpack_require__(209)('socket.io-client');
+	var url = __webpack_require__(210);
+	var parser = __webpack_require__(215);
+	var Manager = __webpack_require__(225);
+	var debug = __webpack_require__(212)('socket.io-client');
 
 	/**
 	 * Module exports.
@@ -22812,11 +23110,11 @@
 	 * @api public
 	 */
 
-	exports.Manager = __webpack_require__(222);
-	exports.Socket = __webpack_require__(252);
+	exports.Manager = __webpack_require__(225);
+	exports.Socket = __webpack_require__(255);
 
 /***/ },
-/* 207 */
+/* 210 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -22825,8 +23123,8 @@
 	 * Module dependencies.
 	 */
 
-	var parseuri = __webpack_require__(208);
-	var debug = __webpack_require__(209)('socket.io-client:url');
+	var parseuri = __webpack_require__(211);
+	var debug = __webpack_require__(212)('socket.io-client:url');
 
 	/**
 	 * Module exports.
@@ -22898,7 +23196,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 208 */
+/* 211 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -22942,7 +23240,7 @@
 	};
 
 /***/ },
-/* 209 */
+/* 212 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -22955,7 +23253,7 @@
 	 * Expose `debug()` as the module.
 	 */
 
-	exports = module.exports = __webpack_require__(210);
+	exports = module.exports = __webpack_require__(213);
 	exports.log = log;
 	exports.formatArgs = formatArgs;
 	exports.save = save;
@@ -23110,7 +23408,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(109)))
 
 /***/ },
-/* 210 */
+/* 213 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -23127,7 +23425,7 @@
 	exports.disable = disable;
 	exports.enable = enable;
 	exports.enabled = enabled;
-	exports.humanize = __webpack_require__(211);
+	exports.humanize = __webpack_require__(214);
 
 	/**
 	 * The currently active debug mode names, and names to skip.
@@ -23315,7 +23613,7 @@
 	}
 
 /***/ },
-/* 211 */
+/* 214 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -23467,7 +23765,7 @@
 	}
 
 /***/ },
-/* 212 */
+/* 215 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -23476,11 +23774,11 @@
 	 * Module dependencies.
 	 */
 
-	var debug = __webpack_require__(213)('socket.io-parser');
-	var json = __webpack_require__(216);
-	var Emitter = __webpack_require__(218);
-	var binary = __webpack_require__(219);
-	var isBuf = __webpack_require__(221);
+	var debug = __webpack_require__(216)('socket.io-parser');
+	var json = __webpack_require__(219);
+	var Emitter = __webpack_require__(221);
+	var binary = __webpack_require__(222);
+	var isBuf = __webpack_require__(224);
 
 	/**
 	 * Protocol version.
@@ -23871,7 +24169,7 @@
 	}
 
 /***/ },
-/* 213 */
+/* 216 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -23884,7 +24182,7 @@
 	 * Expose `debug()` as the module.
 	 */
 
-	exports = module.exports = __webpack_require__(214);
+	exports = module.exports = __webpack_require__(217);
 	exports.log = log;
 	exports.formatArgs = formatArgs;
 	exports.save = save;
@@ -24029,7 +24327,7 @@
 	}
 
 /***/ },
-/* 214 */
+/* 217 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -24046,7 +24344,7 @@
 	exports.disable = disable;
 	exports.enable = enable;
 	exports.enabled = enabled;
-	exports.humanize = __webpack_require__(215);
+	exports.humanize = __webpack_require__(218);
 
 	/**
 	 * The currently active debug mode names, and names to skip.
@@ -24231,7 +24529,7 @@
 	}
 
 /***/ },
-/* 215 */
+/* 218 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -24357,7 +24655,7 @@
 	}
 
 /***/ },
-/* 216 */
+/* 219 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {"use strict";
@@ -24368,7 +24666,7 @@
 	;(function () {
 	  // Detect the `define` function exposed by asynchronous module loaders. The
 	  // strict `define` check is necessary for compatibility with `r.js`.
-	  var isLoader = "function" === "function" && __webpack_require__(217);
+	  var isLoader = "function" === "function" && __webpack_require__(220);
 
 	  // A set of types used to distinguish objects from primitives.
 	  var objectTypes = {
@@ -25290,7 +25588,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(192)(module), (function() { return this; }())))
 
 /***/ },
-/* 217 */
+/* 220 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(__webpack_amd_options__) {module.exports = __webpack_amd_options__;
@@ -25298,7 +25596,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, {}))
 
 /***/ },
-/* 218 */
+/* 221 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -25463,7 +25761,7 @@
 	};
 
 /***/ },
-/* 219 */
+/* 222 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -25476,8 +25774,8 @@
 	 * Module requirements
 	 */
 
-	var isArray = __webpack_require__(220);
-	var isBuf = __webpack_require__(221);
+	var isArray = __webpack_require__(223);
+	var isBuf = __webpack_require__(224);
 
 	/**
 	 * Replaces every Buffer | ArrayBuffer in packet with a numbered placeholder.
@@ -25615,7 +25913,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 220 */
+/* 223 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -25625,7 +25923,7 @@
 	};
 
 /***/ },
-/* 221 */
+/* 224 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {"use strict";
@@ -25644,7 +25942,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 222 */
+/* 225 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25655,15 +25953,15 @@
 	 * Module dependencies.
 	 */
 
-	var eio = __webpack_require__(223);
-	var Socket = __webpack_require__(252);
-	var Emitter = __webpack_require__(253);
-	var parser = __webpack_require__(212);
-	var on = __webpack_require__(255);
-	var bind = __webpack_require__(256);
-	var debug = __webpack_require__(209)('socket.io-client:manager');
-	var indexOf = __webpack_require__(250);
-	var Backoff = __webpack_require__(257);
+	var eio = __webpack_require__(226);
+	var Socket = __webpack_require__(255);
+	var Emitter = __webpack_require__(256);
+	var parser = __webpack_require__(215);
+	var on = __webpack_require__(258);
+	var bind = __webpack_require__(259);
+	var debug = __webpack_require__(212)('socket.io-client:manager');
+	var indexOf = __webpack_require__(253);
+	var Backoff = __webpack_require__(260);
 
 	/**
 	 * IE6+ hasOwnProperty
@@ -26211,20 +26509,20 @@
 	};
 
 /***/ },
-/* 223 */
+/* 226 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(224);
+	module.exports = __webpack_require__(227);
 
 /***/ },
-/* 224 */
+/* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	module.exports = __webpack_require__(225);
+	module.exports = __webpack_require__(228);
 
 	/**
 	 * Exports parser
@@ -26232,10 +26530,10 @@
 	 * @api public
 	 *
 	 */
-	module.exports.parser = __webpack_require__(232);
+	module.exports.parser = __webpack_require__(235);
 
 /***/ },
-/* 225 */
+/* 228 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -26246,14 +26544,14 @@
 	 * Module dependencies.
 	 */
 
-	var transports = __webpack_require__(226);
-	var Emitter = __webpack_require__(240);
-	var debug = __webpack_require__(244)('engine.io-client:socket');
-	var index = __webpack_require__(250);
-	var parser = __webpack_require__(232);
-	var parseuri = __webpack_require__(208);
-	var parsejson = __webpack_require__(251);
-	var parseqs = __webpack_require__(241);
+	var transports = __webpack_require__(229);
+	var Emitter = __webpack_require__(243);
+	var debug = __webpack_require__(247)('engine.io-client:socket');
+	var index = __webpack_require__(253);
+	var parser = __webpack_require__(235);
+	var parseuri = __webpack_require__(211);
+	var parsejson = __webpack_require__(254);
+	var parseqs = __webpack_require__(244);
 
 	/**
 	 * Module exports.
@@ -26381,9 +26679,9 @@
 	 */
 
 	Socket.Socket = Socket;
-	Socket.Transport = __webpack_require__(231);
-	Socket.transports = __webpack_require__(226);
-	Socket.parser = __webpack_require__(232);
+	Socket.Transport = __webpack_require__(234);
+	Socket.transports = __webpack_require__(229);
+	Socket.parser = __webpack_require__(235);
 
 	/**
 	 * Creates transport of the given type.
@@ -26972,7 +27270,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 226 */
+/* 229 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -26981,10 +27279,10 @@
 	 * Module dependencies
 	 */
 
-	var XMLHttpRequest = __webpack_require__(227);
-	var XHR = __webpack_require__(229);
-	var JSONP = __webpack_require__(247);
-	var websocket = __webpack_require__(248);
+	var XMLHttpRequest = __webpack_require__(230);
+	var XHR = __webpack_require__(232);
+	var JSONP = __webpack_require__(250);
+	var websocket = __webpack_require__(251);
 
 	/**
 	 * Export transports.
@@ -27033,14 +27331,14 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 227 */
+/* 230 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
 
 	// browser shim for xmlhttprequest module
 
-	var hasCORS = __webpack_require__(228);
+	var hasCORS = __webpack_require__(231);
 
 	module.exports = function (opts) {
 	  var xdomain = opts.xdomain;
@@ -27078,7 +27376,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 228 */
+/* 231 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -27100,7 +27398,7 @@
 	}
 
 /***/ },
-/* 229 */
+/* 232 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -27109,11 +27407,11 @@
 	 * Module requirements.
 	 */
 
-	var XMLHttpRequest = __webpack_require__(227);
-	var Polling = __webpack_require__(230);
-	var Emitter = __webpack_require__(240);
-	var inherit = __webpack_require__(242);
-	var debug = __webpack_require__(244)('engine.io-client:polling-xhr');
+	var XMLHttpRequest = __webpack_require__(230);
+	var Polling = __webpack_require__(233);
+	var Emitter = __webpack_require__(243);
+	var inherit = __webpack_require__(245);
+	var debug = __webpack_require__(247)('engine.io-client:polling-xhr');
 
 	/**
 	 * Module exports.
@@ -27531,7 +27829,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 230 */
+/* 233 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27540,12 +27838,12 @@
 	 * Module dependencies.
 	 */
 
-	var Transport = __webpack_require__(231);
-	var parseqs = __webpack_require__(241);
-	var parser = __webpack_require__(232);
-	var inherit = __webpack_require__(242);
-	var yeast = __webpack_require__(243);
-	var debug = __webpack_require__(244)('engine.io-client:polling');
+	var Transport = __webpack_require__(234);
+	var parseqs = __webpack_require__(244);
+	var parser = __webpack_require__(235);
+	var inherit = __webpack_require__(245);
+	var yeast = __webpack_require__(246);
+	var debug = __webpack_require__(247)('engine.io-client:polling');
 
 	/**
 	 * Module exports.
@@ -27558,7 +27856,7 @@
 	 */
 
 	var hasXHR2 = function () {
-	  var XMLHttpRequest = __webpack_require__(227);
+	  var XMLHttpRequest = __webpack_require__(230);
 	  var xhr = new XMLHttpRequest({ xdomain: false });
 	  return null != xhr.responseType;
 	}();
@@ -27782,7 +28080,7 @@
 	};
 
 /***/ },
-/* 231 */
+/* 234 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -27791,8 +28089,8 @@
 	 * Module dependencies.
 	 */
 
-	var parser = __webpack_require__(232);
-	var Emitter = __webpack_require__(240);
+	var parser = __webpack_require__(235);
+	var Emitter = __webpack_require__(243);
 
 	/**
 	 * Module exports.
@@ -27946,7 +28244,7 @@
 	};
 
 /***/ },
-/* 232 */
+/* 235 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -27955,15 +28253,15 @@
 	 * Module dependencies.
 	 */
 
-	var keys = __webpack_require__(233);
-	var hasBinary = __webpack_require__(234);
-	var sliceBuffer = __webpack_require__(235);
-	var after = __webpack_require__(236);
-	var utf8 = __webpack_require__(237);
+	var keys = __webpack_require__(236);
+	var hasBinary = __webpack_require__(237);
+	var sliceBuffer = __webpack_require__(238);
+	var after = __webpack_require__(239);
+	var utf8 = __webpack_require__(240);
 
 	var base64encoder;
 	if (global && global.ArrayBuffer) {
-	  base64encoder = __webpack_require__(238);
+	  base64encoder = __webpack_require__(241);
 	}
 
 	/**
@@ -28021,7 +28319,7 @@
 	 * Create a blob api even for blob builder when vendor prefixes exist
 	 */
 
-	var Blob = __webpack_require__(239);
+	var Blob = __webpack_require__(242);
 
 	/**
 	 * Encodes a packet.
@@ -28560,7 +28858,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 233 */
+/* 236 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -28585,7 +28883,7 @@
 	};
 
 /***/ },
-/* 234 */
+/* 237 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -28596,7 +28894,7 @@
 	 * Module requirements.
 	 */
 
-	var isArray = __webpack_require__(220);
+	var isArray = __webpack_require__(223);
 
 	/**
 	 * Module exports.
@@ -28649,7 +28947,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 235 */
+/* 238 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -28693,7 +28991,7 @@
 	};
 
 /***/ },
-/* 236 */
+/* 239 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -28728,7 +29026,7 @@
 	function noop() {}
 
 /***/ },
-/* 237 */
+/* 240 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {'use strict';
@@ -28947,7 +29245,7 @@
 
 		// Some AMD build optimizers, like r.js, check for specific condition patterns
 		// like the following:
-		if ("function" == 'function' && _typeof(__webpack_require__(217)) == 'object' && __webpack_require__(217)) {
+		if ("function" == 'function' && _typeof(__webpack_require__(220)) == 'object' && __webpack_require__(220)) {
 			!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
 				return wtf8;
 			}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -28971,7 +29269,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(192)(module), (function() { return this; }())))
 
 /***/ },
-/* 238 */
+/* 241 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -29052,7 +29350,7 @@
 	})();
 
 /***/ },
-/* 239 */
+/* 242 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -29151,7 +29449,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 240 */
+/* 243 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29315,7 +29613,7 @@
 	};
 
 /***/ },
-/* 241 */
+/* 244 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -29359,7 +29657,7 @@
 	};
 
 /***/ },
-/* 242 */
+/* 245 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -29372,7 +29670,7 @@
 	};
 
 /***/ },
-/* 243 */
+/* 246 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -29445,7 +29743,7 @@
 	module.exports = yeast;
 
 /***/ },
-/* 244 */
+/* 247 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -29458,7 +29756,7 @@
 	 * Expose `debug()` as the module.
 	 */
 
-	exports = module.exports = __webpack_require__(245);
+	exports = module.exports = __webpack_require__(248);
 	exports.log = log;
 	exports.formatArgs = formatArgs;
 	exports.save = save;
@@ -29613,7 +29911,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(109)))
 
 /***/ },
-/* 245 */
+/* 248 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -29630,7 +29928,7 @@
 	exports.disable = disable;
 	exports.enable = enable;
 	exports.enabled = enabled;
-	exports.humanize = __webpack_require__(246);
+	exports.humanize = __webpack_require__(249);
 
 	/**
 	 * The currently active debug mode names, and names to skip.
@@ -29818,7 +30116,7 @@
 	}
 
 /***/ },
-/* 246 */
+/* 249 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -29970,7 +30268,7 @@
 	}
 
 /***/ },
-/* 247 */
+/* 250 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -29979,8 +30277,8 @@
 	 * Module requirements.
 	 */
 
-	var Polling = __webpack_require__(230);
-	var inherit = __webpack_require__(242);
+	var Polling = __webpack_require__(233);
+	var inherit = __webpack_require__(245);
 
 	/**
 	 * Module exports.
@@ -30208,7 +30506,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 248 */
+/* 251 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -30217,17 +30515,17 @@
 	 * Module dependencies.
 	 */
 
-	var Transport = __webpack_require__(231);
-	var parser = __webpack_require__(232);
-	var parseqs = __webpack_require__(241);
-	var inherit = __webpack_require__(242);
-	var yeast = __webpack_require__(243);
-	var debug = __webpack_require__(244)('engine.io-client:websocket');
+	var Transport = __webpack_require__(234);
+	var parser = __webpack_require__(235);
+	var parseqs = __webpack_require__(244);
+	var inherit = __webpack_require__(245);
+	var yeast = __webpack_require__(246);
+	var debug = __webpack_require__(247)('engine.io-client:websocket');
 	var BrowserWebSocket = global.WebSocket || global.MozWebSocket;
 	var NodeWebSocket;
 	if (typeof window === 'undefined') {
 	  try {
-	    NodeWebSocket = __webpack_require__(249);
+	    NodeWebSocket = __webpack_require__(252);
 	  } catch (e) {}
 	}
 
@@ -30500,13 +30798,13 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 249 */
+/* 252 */
 /***/ function(module, exports) {
 
 	/* (ignored) */
 
 /***/ },
-/* 250 */
+/* 253 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -30522,7 +30820,7 @@
 	};
 
 /***/ },
-/* 251 */
+/* 254 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -30560,7 +30858,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 252 */
+/* 255 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -30569,13 +30867,13 @@
 	 * Module dependencies.
 	 */
 
-	var parser = __webpack_require__(212);
-	var Emitter = __webpack_require__(253);
-	var toArray = __webpack_require__(254);
-	var on = __webpack_require__(255);
-	var bind = __webpack_require__(256);
-	var debug = __webpack_require__(209)('socket.io-client:socket');
-	var hasBin = __webpack_require__(234);
+	var parser = __webpack_require__(215);
+	var Emitter = __webpack_require__(256);
+	var toArray = __webpack_require__(257);
+	var on = __webpack_require__(258);
+	var bind = __webpack_require__(259);
+	var debug = __webpack_require__(212)('socket.io-client:socket');
+	var hasBin = __webpack_require__(237);
 
 	/**
 	 * Module exports.
@@ -30981,7 +31279,7 @@
 	};
 
 /***/ },
-/* 253 */
+/* 256 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -31145,7 +31443,7 @@
 	};
 
 /***/ },
-/* 254 */
+/* 257 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -31165,7 +31463,7 @@
 	}
 
 /***/ },
-/* 255 */
+/* 258 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -31195,7 +31493,7 @@
 	}
 
 /***/ },
-/* 256 */
+/* 259 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -31225,7 +31523,7 @@
 	};
 
 /***/ },
-/* 257 */
+/* 260 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -31313,284 +31611,6 @@
 	Backoff.prototype.setJitter = function (jitter) {
 	  this.jitter = jitter;
 	};
-
-/***/ },
-/* 258 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _SearchSide = __webpack_require__(259);
-
-	var _SearchSide2 = _interopRequireDefault(_SearchSide);
-
-	var _ChartSide = __webpack_require__(261);
-
-	var _ChartSide2 = _interopRequireDefault(_ChartSide);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var Layout = _react2.default.createClass({
-	  displayName: 'Layout',
-	  render: function render() {
-	    return _react2.default.createElement(
-	      'div',
-	      { className: 'layout' },
-	      _react2.default.createElement(_SearchSide2.default, null),
-	      _react2.default.createElement(_ChartSide2.default, null)
-	    );
-	  }
-	});
-
-	exports.default = Layout;
-
-/***/ },
-/* 259 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _reactRedux = __webpack_require__(167);
-
-	var _StockInfo = __webpack_require__(260);
-
-	var _StockInfo2 = _interopRequireDefault(_StockInfo);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var SearchSide = _react2.default.createClass({
-	  displayName: 'SearchSide',
-	  getInitialState: function getInitialState() {
-	    return {
-	      searchStock: '',
-	      stockList: [],
-	      lastRequest: 0,
-	      loadingSuggest: false,
-	      loadingStock: false
-	    };
-	  },
-	  componentDidMount: function componentDidMount() {
-	    if (typeof window != 'undefined') {
-	      this.props.dispatch({
-	        type: 'INIT_SOCKET.IO'
-	      });
-	    }
-	  },
-	  render: function render() {
-	    return _react2.default.createElement(
-	      'div',
-	      { className: 'search-side' },
-	      _react2.default.createElement(
-	        'h1',
-	        null,
-	        'SEARCH STOCK'
-	      ),
-	      this.state.loadingSuggest ? _react2.default.createElement(
-	        'small',
-	        null,
-	        'Loading list for ',
-	        this.state.searchStock,
-	        '..'
-	      ) : _react2.default.createElement(
-	        'small',
-	        null,
-	        'No suggestions, search for more'
-	      ),
-	      _react2.default.createElement(
-	        'form',
-	        { className: 'search-form' },
-	        _react2.default.createElement('input', { type: 'text', list: 'stockList', onChange: this.editSearch,
-	          placeholder: 'Stock name', value: this.state.searchStock }),
-	        _react2.default.createElement(
-	          'datalist',
-	          { id: 'stockList' },
-	          this.state.stockList.map(function (val, idx) {
-	            return _react2.default.createElement('option', { key: idx, value: val.dataset_code });
-	          })
-	        ),
-	        _react2.default.createElement(
-	          'button',
-	          { type: 'submit', onClick: this.addStock },
-	          _react2.default.createElement(
-	            'i',
-	            { className: 'material-icons' },
-	            'search'
-	          )
-	        )
-	      ),
-	      _react2.default.createElement('hr', null),
-	      this.state.loadingStock ? _react2.default.createElement(
-	        'small',
-	        null,
-	        'Loading ',
-	        this.state.searchStock,
-	        '..'
-	      ) : '',
-	      this.props.stockList.map(function (stock, idx) {
-	        return _react2.default.createElement(_StockInfo2.default, _extends({ key: idx }, stock));
-	      })
-	    );
-	  },
-	  editSearch: function editSearch(e) {
-	    var _this = this;
-
-	    var requestTime = new Date().getTime();
-	    var searchStock = e.target.value.toUpperCase().split('').filter(function (val) {
-	      return (/[A-Za-z]/.test(val)
-	      );
-	    }).join('');
-
-	    if (searchStock.length < 1) return this.setState({ searchStock: searchStock, stockList: [] });else this.setState({ searchStock: searchStock });
-
-	    if (requestTime < this.state.lastRequest + 300) return;
-
-	    this.setState({ lastRequest: requestTime, loadingSuggest: true });
-
-	    this.props.dispatch({
-	      type: 'POST',
-	      url: '/search-stock',
-	      data: {
-	        query: searchStock
-	      },
-	      callback: function callback(res) {
-	        if (res.error) {
-	          _this.setState({ stockList: [], lastRequest: requestTime, loadingSuggest: false });
-	          return console.warn(res.error);
-	        }
-
-	        if (res.query != _this.state.searchStock) {
-	          _this.setState({
-	            stockList: res.query.length < _this.state.searchStock.length ? res.stockList : [],
-	            lastRequest: res.requestTime,
-	            loadingSuggest: false
-	          });
-	        } else {
-	          _this.setState({
-	            stockList: res.stockList,
-	            lastRequest: res.requestTime,
-	            loadingSuggest: false
-	          });
-	        }
-	      }
-	    });
-	  },
-	  addStock: function addStock(e) {
-	    var _this2 = this;
-
-	    e.preventDefault();
-
-	    if (this.state.searchStock.length < 1) return;
-
-	    if (this.props.stockList.filter(function (stock) {
-	      return stock.dataset_code == _this2.state.searchStock;
-	    }).length) return;
-
-	    this.setState({ loadingStock: true });
-
-	    this.props.dispatch({
-	      type: 'POST',
-	      url: '/get-stock',
-	      data: {
-	        query: this.state.searchStock
-	      },
-	      callback: function callback(res) {
-	        _this2.setState({ loadingStock: false });
-
-	        if (res.error) return console.warn(res.error);
-
-	        _this2.props.dispatch({
-	          type: 'ADD_STOCK',
-	          data: res.stockData
-	        });
-	      }
-	    });
-	  }
-	});
-
-	var ConnectedSearchSide = (0, _reactRedux.connect)(function (state) {
-	  return state;
-	})(SearchSide);
-
-	exports.default = ConnectedSearchSide;
-
-/***/ },
-/* 260 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _reactRedux = __webpack_require__(167);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	var StockInfo = _react2.default.createClass({
-	  displayName: 'StockInfo',
-	  render: function render() {
-	    return _react2.default.createElement(
-	      'div',
-	      { className: 'stock-info' },
-	      _react2.default.createElement(
-	        'h2',
-	        null,
-	        this.props.dataset_code,
-	        ' ',
-	        _react2.default.createElement(
-	          'small',
-	          null,
-	          this.props.database_code
-	        ),
-	        _react2.default.createElement(
-	          'i',
-	          { onClick: this.removeStock, className: 'remove material-icons' },
-	          'close'
-	        )
-	      ),
-	      _react2.default.createElement(
-	        'p',
-	        null,
-	        this.props.name
-	      )
-	    );
-	  },
-	  removeStock: function removeStock() {
-	    this.props.dispatch({
-	      type: 'REMOVE_STOCK',
-	      id: this.props.id
-	    });
-	  }
-	});
-
-	var ConnectedStockInfo = (0, _reactRedux.connect)(function (state) {
-	  return {};
-	})(StockInfo);
-
-	exports.default = ConnectedStockInfo;
 
 /***/ },
 /* 261 */

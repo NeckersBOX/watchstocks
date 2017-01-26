@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import StockInfo from './StockInfo';
+import io from 'socket.io-client';
 
 const SearchSide = React.createClass ({
   getInitialState () {
@@ -14,8 +15,28 @@ const SearchSide = React.createClass ({
   },
   componentDidMount () {
     if ( typeof window != 'undefined' ) {
+      let socket_io = io ();
+
+      socket_io.on ('new_stock', (data) => {
+        let stock_exists = false;
+
+        for ( let stockIdx in this.props.stockList ) {
+          if ( this.props.stockList[stockIdx].dataset_code == data.dataset_code ) {
+            stock_exists = true;
+            break;
+          }
+        }
+
+        if ( !stock_exists )
+          this.props.dispatch ({
+            type: 'ADD_STOCK',
+            data: data
+          });
+      });
+
       this.props.dispatch ({
-        type: 'INIT_SOCKET.IO'
+        type: 'INIT_SOCKET.IO',
+        data: socket_io
       });
     }
   },
