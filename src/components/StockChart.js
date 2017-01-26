@@ -240,14 +240,15 @@ const StockChart = React.createClass ({
         .attr ("text-anchor", "end")
         .text ("Price");
   },
+  componentDidUpdate () {
+    this.drawChart ();
+  },
   render () {
-    if ( this.props.stockList.length < 1 ) {
+    if ( !this.props.stockList.length ) {
       return (
         <h2 style={{ textAlign: 'center' }}>No stock found.</h2>
       );
     }
-
-    this.drawChart ();
 
     return (
       <div>
