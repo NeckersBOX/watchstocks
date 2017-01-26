@@ -5,6 +5,8 @@ import React from 'react';
 import ReactDOMServer from 'react-dom/server'
 import App from './components/App';
 import { searchQuandlDatasets, getQuandlDatasetData } from './quandl';
+import SocketIO from 'socket.io';
+
 
 let app = new Express ();
 
@@ -85,4 +87,8 @@ app.post ('/get-stock', (req, res) => {
   getQuandlDatasetData (query, quandlCallback);
 });
 
-app.listen (process.env.PORT || 3000);
+let io = SocketIO (app.listen (process.env.PORT || 3000));
+
+io.on ('connection', socket => {
+  console.log ('user connected');
+});

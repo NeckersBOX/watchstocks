@@ -12,6 +12,13 @@ const SearchSide = React.createClass ({
       loadingStock: false
     };
   },
+  componentDidMount () {
+    if ( typeof window != 'undefined' ) {
+      this.props.dispatch ({
+        type: 'INIT_SOCKET.IO'
+      });
+    }
+  },
   render () {
     return (
       <div className="search-side">
