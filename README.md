@@ -1,6 +1,9 @@
 # Chart the Stock Market
 ### FreeCodeCamp Challenge
 
+### Demo
+https://neckers-watchstocks.herokuapp.com/
+
 This project allow you to add stocks and see them in the chart with daily, weekly, monthly or yearly resolution. Every time a connected user add a stock, it go to be added to all others connected users.
 
 #### Dependency
