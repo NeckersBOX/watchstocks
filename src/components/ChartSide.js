@@ -34,7 +34,7 @@ const ChartSide = React.createClass ({
           fontSize: '12px',
           position: 'relative',
           top: '1px'
-        }} className="material-icons">copyright</i> Written by <a href="http://neckersbox.eu">Davide Francesco Merico</a></small>
+        }} className="material-icons">copyright</i> Written by <a href="http://neckersbox.eu">Davide Francesco Merico</a> - <a href="https://github.com/NeckersBOX/watchstocks">GitHub</a></small>
       </div>
     );
   }

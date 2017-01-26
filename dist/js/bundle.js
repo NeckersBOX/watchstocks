@@ -31705,6 +31705,12 @@
 	          'a',
 	          { href: 'http://neckersbox.eu' },
 	          'Davide Francesco Merico'
+	        ),
+	        ' - ',
+	        _react2.default.createElement(
+	          'a',
+	          { href: 'https://github.com/NeckersBOX/watchstocks' },
+	          'GitHub'
 	        )
 	      )
 	    );
