@@ -22652,6 +22652,8 @@
 	        return stock.id != action.id;
 	      });
 
+	      if (state.socket_io) state.socket_io.emit('rm_stock', action.id);
+
 	      newState = Object.assign({}, state, {
 	        stockList: newStockList
 	      });
@@ -22790,6 +22792,22 @@
 	        if (!stock_exists) _this.props.dispatch({
 	          type: 'ADD_STOCK',
 	          data: data
+	        });
+	      });
+
+	      socket_io.on('rm_stock', function (data) {
+	        var stock_exists = false;
+
+	        for (var stockIdx in _this.props.stockList) {
+	          if (_this.props.stockList[stockIdx].id == data) {
+	            stock_exists = true;
+	            break;
+	          }
+	        }
+
+	        if (stock_exists) _this.props.dispatch({
+	          type: 'REMOVE_STOCK',
+	          id: data
 	        });
 	      });
 

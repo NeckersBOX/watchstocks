@@ -91,4 +91,5 @@ let io = SocketIO (app.listen (process.env.PORT || 3000));
 
 io.on ('connection', socket => {
   socket.on ('add_stock', data => socket.broadcast.emit ('new_stock', data));
+  socket.on ('rm_stock', data => socket.broadcast.emit ('rm_stock', data));
 });

@@ -34,6 +34,23 @@ const SearchSide = React.createClass ({
           });
       });
 
+      socket_io.on ('rm_stock', (data) => {
+        let stock_exists = false;
+
+        for ( let stockIdx in this.props.stockList ) {
+          if ( this.props.stockList[stockIdx].id == data ) {
+            stock_exists = true;
+            break;
+          }
+        }
+
+        if ( stock_exists )
+          this.props.dispatch ({
+            type: 'REMOVE_STOCK',
+            id: data
+          });
+      });
+
       this.props.dispatch ({
         type: 'INIT_SOCKET.IO',
         data: socket_io

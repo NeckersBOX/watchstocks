@@ -23,6 +23,9 @@ const reducer = (state, action) => {
     case 'REMOVE_STOCK':
       newStockList = state.stockList.filter (stock => stock.id != action.id);
 
+      if ( state.socket_io )
+        state.socket_io.emit ('rm_stock', action.id);
+        
       newState = Object.assign ({}, state, {
         stockList: newStockList
       });
